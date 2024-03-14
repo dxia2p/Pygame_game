@@ -4,18 +4,20 @@ import Gui
 pygame.init()
 
 tiles = []
-selectedTile = None
+
 class Tile: # fix this
+    selectedTile = None
     def onClick(self):
-        if selectedTile == self:
-            selectedTile = None
+        if Tile.selectedTile == self:
+            Tile.selectedTile = None
         else:
-            selectedTile = self
+            Tile.selectedTile = self
     def __init__(self, texture, id):
         tiles.append(self)
         self.button = Gui.Button(pygame.Vector2(50 * len(tiles), 500), pygame.Vector2(50, 50), tile1Img, gui, self.onClick)
         self.texture = texture
         self.id = id
+
 class Camera:
     def __init__(self, screenSize : pygame.Vector2) -> None:
         self.pos = pygame.Vector2(0, 0)
@@ -32,6 +34,10 @@ gui = Gui.GUI(screen)
 tile1Img = pygame.image.load('img/dirtBlock.jpg')
 tile1Img = pygame.transform.scale(tile1Img, (50, 50))
 tile1 = Tile(tile1Img, 0)
+tilemap = [100][100]
+for i in range(0, len(tilemap)):
+    for j in range(0, len(tilemap[i])):
+        tilemap[i][j] = -1
 
 clock = pygame.time.Clock()
 deltaTime = 0 # time in seconds between each frame
@@ -62,10 +68,12 @@ while running:
         camera.pos.x -= 5 * deltaTime
 
     # draw a preview of the tile at the mouse poisition if it is selected
-    if selectedTile != None:
+    if Tile.selectedTile != None:
         p = pygame.mouse.get_pos()
+        tileZone = None
         mousePos = pygame.Vector2(p[0], p[1])
-        screen.blit(selectedTile.texture, mousePos - pygame.Vector2(gridSize) / 2)
+        texture = pygame.transform.scale(Tile.selectedTile.texture, (30, 30))
+        screen.blit(texture, mousePos - (pygame.Vector2(gridSize) / 2))
 
     # draw the grid
     width = gridColumnCount * gridSize
