@@ -1,4 +1,5 @@
 import pygame
+import sys
 
 class GUIBase:
     def __init__(self, surface) -> None:
@@ -20,8 +21,7 @@ class GUI:
         for element in self.elements:
             element.draw()
     
-    def checkInput(self):
-        ev = pygame.event.get()
+    def checkInput(self, ev):
         for element in self.elements:
             element.checkInput(ev)
 
@@ -48,8 +48,10 @@ class Button (GUIBase):
         p = pygame.mouse.get_pos()
         clickPos = pygame.Vector2(p[0], p[1])
         #print(str(clickPos.x) + " " + str(clickPos.y))
+        
         for ev in event:
             if ev.type == pygame.MOUSEBUTTONUP:  
+                print(ev.type)
                 left = self.pos.x - self.size.x / 2
                 right = self.pos.x + self.size.x / 2
                 top = self.pos.y - self.size.y / 2
