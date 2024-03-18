@@ -51,7 +51,6 @@ class Button (GUIBase):
         
         for ev in event:
             if ev.type == pygame.MOUSEBUTTONUP:  
-                print(ev.type)
                 left = self.pos.x - self.size.x / 2
                 right = self.pos.x + self.size.x / 2
                 top = self.pos.y - self.size.y / 2
