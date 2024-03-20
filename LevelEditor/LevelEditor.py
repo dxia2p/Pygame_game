@@ -11,7 +11,7 @@ class Tile: # class to store information about tile at position in grid
         self.tileType = tileType
         self.tiles.append(self)
     def drawTile(self):
-        self.tileType.camera.drawTexture(self.tileType.texture, self.position * self.tileType.GRID_SIZE, pygame.Vector2(self.tileType.GRID_SIZE, self.tileType.GRID_SIZE))
+        self.tileType.camera.drawTexture(self.tileType.texture, (self.position * self.tileType.GRID_SIZE) - pygame.Vector2(self.tileType.GRID_SIZE / 2, self.tileType.GRID_SIZE / 2), pygame.Vector2(self.tileType.GRID_SIZE, self.tileType.GRID_SIZE))
     
     @staticmethod
     def drawAll():
@@ -77,8 +77,12 @@ for i in range(0, len(tilemap)):
 clock = pygame.time.Clock()
 deltaTime = 0 # time in seconds between each frame
 
+def addTile(selectedTileGridPos):
+    t = Tile(selectedTileGridPos, TileType.selectedTile)
+    tilemap[int(selectedTileGridPos.x)][int(selectedTileGridPos.y)] = t
+
 #-------------------- MAIN LOOP -------------------------
-clock.tick(30)
+#sclock.tick(60)
 while running:
     events = pygame.event.get()
     # Fill the background with grey
@@ -87,13 +91,13 @@ while running:
     # get input
     keys = pygame.key.get_pressed()
     if keys[pygame.K_w]:
-        camera.pos.y += 5 * deltaTime
+        camera.pos.y += 15 * deltaTime
     if keys[pygame.K_s]:
-        camera.pos.y -= 5 * deltaTime
+        camera.pos.y -= 15 * deltaTime
     if keys[pygame.K_d]:
-        camera.pos.x += 5 * deltaTime
+        camera.pos.x += 15 * deltaTime
     if keys[pygame.K_a]:
-        camera.pos.x -= 5 * deltaTime
+        camera.pos.x -= 15 * deltaTime
 
     # draw a preview of the tile at the mouse poisition if it is selected
     if TileType.selectedTile != None:
@@ -101,13 +105,14 @@ while running:
         mousePos = pygame.Vector2(p[0], p[1])
         mousePos = camera.getWorldMousePos(mousePos)
         mousePos = pygame.Vector2(round(mousePos.x / GRID_SIZE) * GRID_SIZE, round(mousePos.y / GRID_SIZE) * GRID_SIZE) - pygame.Vector2(GRID_SIZE / 2, GRID_SIZE / 2)
-        selectedTileGridPos = pygame.Vector2(round(mousePos.x / GRID_SIZE), round(mousePos.y / GRID_SIZE))
+        selectedTileGridPos = pygame.Vector2(int((mousePos.x + GRID_SIZE / 2) / GRID_SIZE), int((mousePos.y + GRID_SIZE / 2) / GRID_SIZE))
         #print("MOUSE POS: " + str(mousePos.x) + " " + str(mousePos.y))
         #print(str(tileZone.x) + " " + str(tileZone.y))
         camera.drawTexture(tile1Img, mousePos, pygame.Vector2(30, 30))
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
-                Tile(selectedTileGridPos, TileType.selectedTile)
+                addTile(selectedTileGridPos)
+
 
     # draw the grid
     width = GRID_COLUMN_COUNT * GRID_SIZE
