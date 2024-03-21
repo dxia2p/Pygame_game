@@ -72,7 +72,12 @@ tile1 = TileType(tile1Img, 0, camera, GRID_SIZE)
 tilemap = [[-1] * 100] * 100
 for i in range(0, len(tilemap)):
     for j in range(0, len(tilemap[i])):
-        tilemap[i][j] = -1
+        tilemap[i][j] = None
+
+surf = pygame.Surface((tile1Img.get_width(), tile1Img.get_height()), pygame.SRCALPHA)
+surf.set_alpha(128)
+surf.blit(tile1Img, pygame.Vector2(0, 0))
+
 
 clock = pygame.time.Clock()
 deltaTime = 0 # time in seconds between each frame
@@ -81,9 +86,17 @@ def addTile(selectedTileGridPos):
     t = Tile(selectedTileGridPos, TileType.selectedTile)
     tilemap[int(selectedTileGridPos.x)][int(selectedTileGridPos.y)] = t
 
+def removeTile(selectedTileGridPos):
+    t = tilemap[int(selectedTileGridPos.x)][int(selectedTileGridPos.y)]
+    if t == None:
+        return
+    Tile.tiles.remove(t)
+    tilemap[int(selectedTileGridPos.x)][int(selectedTileGridPos.y)] = None
+
 #-------------------- MAIN LOOP -------------------------
-#sclock.tick(60)
+clock.tick(60)
 while running:
+
     events = pygame.event.get()
     # Fill the background with grey
     screen.fill((200, 200, 200))
@@ -99,6 +112,8 @@ while running:
     if keys[pygame.K_a]:
         camera.pos.x -= 15 * deltaTime
 
+    screen.blit(surf, pygame.Vector2(100, 100))
+
     # draw a preview of the tile at the mouse poisition if it is selected
     if TileType.selectedTile != None:
         p = pygame.mouse.get_pos()
@@ -111,7 +126,10 @@ while running:
         camera.drawTexture(tile1Img, mousePos, pygame.Vector2(30, 30))
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
-                addTile(selectedTileGridPos)
+                if event.button == 1:
+                    addTile(selectedTileGridPos)
+                elif event.button == 3:
+                    removeTile(selectedTileGridPos)
 
 
     # draw the grid
