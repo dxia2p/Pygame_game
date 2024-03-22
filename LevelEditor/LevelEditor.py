@@ -2,21 +2,18 @@ import pygame
 import pygame.math
 import Gui
 import sys
-pygame.init()
+import os
+import tkinter as tk
+from tkinter import *
 
 class Tile: # class to store information about tile at position in grid
-    tiles = []
     def __init__(self, position, tileType):
         self.position = position
         self.tileType = tileType
-        self.tiles.append(self)
     def drawTile(self):
         self.tileType.camera.drawTexture(self.tileType.texture, (self.position * self.tileType.GRID_SIZE) - pygame.Vector2(self.tileType.GRID_SIZE / 2, self.tileType.GRID_SIZE / 2), pygame.Vector2(self.tileType.GRID_SIZE, self.tileType.GRID_SIZE))
-    
-    @staticmethod
-    def drawAll():
-        for t in Tile.tiles:
-            t.drawTile()
+
+
 class TileType: # this is for the gui of each different tile and stores the id for each one
     selectedTile = None
     tiles = []
@@ -56,6 +53,9 @@ class Camera:
             texture = pygame.transform.scale(texture, size)
         screen.blit(texture, pos + pygame.Vector2(-self.pos.x, self.pos.y) + pygame.Vector2(self.size.x / 2, self.size.y / 2))
 
+
+pygame.init()
+
 screen = pygame.display.set_mode([800, 600])
 running = True
 
@@ -66,32 +66,38 @@ GRID_COLUMN_COUNT = 102
 
 camera = Camera(pygame.Vector2(800, 600), screen)
 gui = Gui.GUI(screen)
+# ----------- loading tile 1 ----------
 tile1Img = pygame.image.load('img/dirtBlock.jpg')
 tile1Img = pygame.transform.scale(tile1Img, (50, 50))
 tile1 = TileType(tile1Img, 0, camera, GRID_SIZE)
-tilemap = [[-1] * 100] * 100
-for i in range(0, len(tilemap)):
-    for j in range(0, len(tilemap[i])):
-        tilemap[i][j] = None
+tile1ImgPreview = pygame.Surface((tile1Img.get_width(), tile1Img.get_height()), pygame.SRCALPHA)
+tile1ImgPreview.set_alpha(128)
+tile1ImgPreview.blit(tile1Img, pygame.Vector2(0, 0))
 
-surf = pygame.Surface((tile1Img.get_width(), tile1Img.get_height()), pygame.SRCALPHA)
-surf.set_alpha(128)
-surf.blit(tile1Img, pygame.Vector2(0, 0))
-
+tilemap = [[None] * 100 for i in range(100)]
 
 clock = pygame.time.Clock()
 deltaTime = 0 # time in seconds between each frame
 
+#----------------- TILE FUNCTIONS ------------------------------ probably should move this to tiletype
 def addTile(selectedTileGridPos):
+    print(selectedTileGridPos)
     t = Tile(selectedTileGridPos, TileType.selectedTile)
     tilemap[int(selectedTileGridPos.x)][int(selectedTileGridPos.y)] = t
 
 def removeTile(selectedTileGridPos):
     t = tilemap[int(selectedTileGridPos.x)][int(selectedTileGridPos.y)]
+    print("ADSDASDSAdASDSDADA")
     if t == None:
+        print("Invalid tile")
         return
-    Tile.tiles.remove(t)
     tilemap[int(selectedTileGridPos.x)][int(selectedTileGridPos.y)] = None
+    
+def drawAllTiles():
+    for i in range(len(tilemap)):
+        for j in range(len(tilemap)):
+            if tilemap[i][j] != None:
+                tilemap[i][j].drawTile()
 
 #-------------------- MAIN LOOP -------------------------
 clock.tick(60)
@@ -103,6 +109,7 @@ while running:
     camera.drawBoxOutline("green", pygame.Vector2(0, 0), pygame.Vector2(32, 32), 2)
     # get input
     keys = pygame.key.get_pressed()
+
     if keys[pygame.K_w]:
         camera.pos.y += 15 * deltaTime
     if keys[pygame.K_s]:
@@ -112,7 +119,7 @@ while running:
     if keys[pygame.K_a]:
         camera.pos.x -= 15 * deltaTime
 
-    screen.blit(surf, pygame.Vector2(100, 100))
+    screen.blit(tile1ImgPreview, pygame.Vector2(100, 100))
 
     # draw a preview of the tile at the mouse poisition if it is selected
     if TileType.selectedTile != None:
@@ -123,14 +130,13 @@ while running:
         selectedTileGridPos = pygame.Vector2(int((mousePos.x + GRID_SIZE / 2) / GRID_SIZE), int((mousePos.y + GRID_SIZE / 2) / GRID_SIZE))
         #print("MOUSE POS: " + str(mousePos.x) + " " + str(mousePos.y))
         #print(str(tileZone.x) + " " + str(tileZone.y))
-        camera.drawTexture(tile1Img, mousePos, pygame.Vector2(30, 30))
+        camera.drawTexture(tile1ImgPreview, mousePos, pygame.Vector2(30, 30))
         for event in events:
             if event.type == pygame.MOUSEBUTTONDOWN:
                 if event.button == 1:
                     addTile(selectedTileGridPos)
                 elif event.button == 3:
                     removeTile(selectedTileGridPos)
-
 
     # draw the grid
     width = GRID_COLUMN_COUNT * GRID_SIZE
@@ -142,8 +148,7 @@ while running:
 
     gui.drawElements()
     gui.checkInput(events)
-    Tile.drawAll()
-
+    drawAllTiles()
     # Did the user click the window close button?
     for event in events:
         if event.type == pygame.QUIT:
