@@ -3,22 +3,28 @@ import pygame.math
 import Gui
 import sys
 import os
-import tkinter as tk
-from tkinter import *
+import SaveSystem
+
+# Grid constants
+GRID_SIZE = 30
+GRID_ROW_COUNT = 102
+GRID_COLUMN_COUNT = 102
 
 class Tile: # class to store information about tile at position in grid
-    tilemap = [[None] * 100 for i in range(100)]
+    tilemap = [[None] * GRID_COLUMN_COUNT for i in range(GRID_ROW_COUNT)]
     def __init__(self, position, tileType): # important to note that position refers to the position in the tilemap's grid (position >= 0, position has to be an integer)
         self.position = position
         self.tileType = tileType
-        print(selectedTileGridPos)
         Tile.tilemap[int(selectedTileGridPos.x)][int(selectedTileGridPos.y)] = self
     def drawTile(self):
         self.tileType.camera.drawTexture(self.tileType.texture, (self.position * self.tileType.GRID_SIZE) - pygame.Vector2(self.tileType.GRID_SIZE / 2, self.tileType.GRID_SIZE / 2), pygame.Vector2(self.tileType.GRID_SIZE, self.tileType.GRID_SIZE))
 
     @staticmethod
     def addTile(gridPosition, tileType):
-        Tile(gridPosition, tileType)
+        if gridPosition.x >= 0 and gridPosition.x < GRID_COLUMN_COUNT and gridPosition.y >= 0 and gridPosition.y < GRID_ROW_COUNT:
+            Tile(gridPosition, tileType)
+        else:
+            print(f"Tile position at {gridPosition.x}, {gridPosition.y} is out of bounds!")
     
     @staticmethod
     def removeTile(gridPosition):
@@ -75,18 +81,13 @@ class Camera:
             texture = pygame.transform.scale(texture, size)
         screen.blit(texture, pos + pygame.Vector2(-self.pos.x, self.pos.y) + pygame.Vector2(self.size.x / 2, self.size.y / 2))
 
-
+# initializing things
 pygame.init()
 
-screen = pygame.display.set_mode([800, 600])
+screen = pygame.display.set_mode([1024, 768])
 running = True
 
-# Grid constants
-GRID_SIZE = 30
-GRID_ROW_COUNT = 101
-GRID_COLUMN_COUNT = 102
-
-camera = Camera(pygame.Vector2(800, 600), screen)
+camera = Camera(pygame.Vector2(1024, 768), screen)
 gui = Gui.GUI(screen)
 
 # ----------- loading tile 1 ----------
@@ -102,11 +103,20 @@ tile1ImgPreview.blit(tile1Img, pygame.Vector2(0, 0))
 clock = pygame.time.Clock()
 deltaTime = 0 # time in seconds between each frame
 
+#----------------------- Save Button ---------------------------
+#saveButton = Gui.Button()
+
 #-------------------- MAIN LOOP -------------------------
+mouseLeftButtonHeld = False # a bool to store if the mouse button is held down
 clock.tick(60)
 while running:
 
     events = pygame.event.get()
+    for event in events:
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
+            mouseLeftButtonHeld = True
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
+            mouseLeftButtonHeld = False
     # Fill the background with grey
     screen.fill((200, 200, 200))
     screen.fill((255, 255, 255))
@@ -146,12 +156,14 @@ while running:
                     Tile.addTile(selectedTileGridPos, TileType.selectedTile)
                 elif event.button == 3:
                     Tile.removeTile(selectedTileGridPos)
+            elif mouseLeftButtonHeld:
+                Tile.addTile(selectedTileGridPos, TileType.selectedTile)
 
     # draw the grid ----------------------
     width = GRID_COLUMN_COUNT * GRID_SIZE
     height = GRID_ROW_COUNT * GRID_SIZE
     gridColor = "#b8c7de"
-    for i in range(0, GRID_COLUMN_COUNT + 1):
+    for i in range(0, GRID_COLUMN_COUNT + 1): # draw thicker lines every 3 tiles
         if(i % 3 == 0):
             camera.drawLine(gridColor, pygame.Vector2(i * GRID_SIZE, 0) - pygame.Vector2(GRID_SIZE / 2, GRID_SIZE / 2), pygame.Vector2(i * GRID_SIZE, height) - pygame.Vector2(GRID_SIZE / 2, GRID_SIZE / 2), 2)
         else:
