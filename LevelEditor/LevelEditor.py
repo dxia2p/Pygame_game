@@ -99,7 +99,7 @@ gui = GuiLib.GUI(screen) # make gui class static???
 
 # ----------- loading tile 1 ----------
 tile1Img = pygame.image.load('img/dirtBlock.jpg').convert_alpha()
-tile1Img = pygame.transform.scale(tile1Img, (50, 50))
+
 tile1 = TileType(tile1Img, 0, GRID_SIZE)
 tile1ImgPreview = pygame.Surface((tile1Img.get_width(), tile1Img.get_height()), pygame.SRCALPHA)
 tile1ImgPreview.set_alpha(128)
@@ -109,11 +109,11 @@ clock = pygame.time.Clock()
 deltaTime = 0 # time in seconds between each frame
 
 #----------------------- Save Button ---------------------------
-#saveButton = Gui.Button()
-saveText = GuiLib.Text(gui, pygame.Vector2(300, 300), 32, "Roboto/Roboto-Regular.ttf")
-saveText.changeText("AAAAAASDASD\nLASKDJASKDJOAI")
-saveText.changeBackgroundColor((3, 11, 252))
-saveText.changeTextColor((252, 3, 103))
+def saveButtonFunc():
+    SaveSystem.SaveTilemap(Tile.tilemap)
+    print("Your tilemap has been saved!")
+saveImg = pygame.image.load('img/SaveButton.png')
+saveButton = GuiLib.Button(pygame.Vector2(70, 60), pygame.Vector2(130, 75), saveImg, gui, saveButtonFunc)
 #-------------------- MAIN LOOP -------------------------
 mouseLeftButtonHeld = False # a bool to store if the mouse button is held down
 clock.tick(60)
@@ -180,10 +180,12 @@ while running:
             Camera.drawLine(gridColor, pygame.Vector2(0, i * GRID_SIZE) - pygame.Vector2(GRID_SIZE / 2, GRID_SIZE / 2), pygame.Vector2(width, i * GRID_SIZE) - pygame.Vector2(GRID_SIZE / 2, GRID_SIZE / 2), 2)
         else:
             Camera.drawLine(gridColor, pygame.Vector2(0, i * GRID_SIZE) - pygame.Vector2(GRID_SIZE / 2, GRID_SIZE / 2), pygame.Vector2(width, i * GRID_SIZE) - pygame.Vector2(GRID_SIZE / 2, GRID_SIZE / 2), 1)
+
+
+    Tile.drawAllTiles()
     # GUI functions
     gui.drawElements()
     gui.checkInput(events)
-    Tile.drawAllTiles()
     # Did the user click the window close button?
     for event in events:
         if event.type == pygame.QUIT:

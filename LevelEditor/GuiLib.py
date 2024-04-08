@@ -33,20 +33,23 @@ class Button (GUIBase):
     def __init__(self, pos : pygame.Vector2, size : pygame.Vector2, texture, gui : GUI, func) -> None:
         GUIBase.__init__(self, gui.surface, gui)
         self.size = size
-        self.texture = texture
         self.pos = pos
         self.func = func
+        self.texture = texture
+        if texture != None:
+            self.texture = pygame.transform.scale(texture, self.size)
     
     def draw(self):
         if self.texture == None:
-            pygame.draw.rect(self.surface, "pink", pygame.Rect(self.pos.x, self.pos.y, self.size.x, self.size.y))
+            rect = pygame.Rect(self.pos.x, self.pos.y, self.size.x, self.size.y)
+            rect.center = self.pos
+            pygame.draw.rect(self.surface, "pink", rect)
         else:
             self.surface.blit(self.texture, self.pos - (self.size / 2))
 
     def checkInput(self, event):
         p = pygame.mouse.get_pos()
         clickPos = pygame.Vector2(p[0], p[1])
-        #print(str(clickPos.x) + " " + str(clickPos.y))
         
         for ev in event:
             if ev.type == pygame.MOUSEBUTTONUP:  
