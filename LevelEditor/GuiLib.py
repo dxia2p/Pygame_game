@@ -2,9 +2,8 @@ import pygame
 import sys
 
 class GUIBase:
-    def __init__(self, surface, gui) -> None:
-        self.surface = surface
-        gui.addElement(self)
+    def __init__(self) -> None:
+        GUI.addElement(self)
         pass
 
     def draw(self):
@@ -14,24 +13,30 @@ class GUIBase:
         pass
 
 class GUI:
-    def __init__(self, surface : pygame.surface) -> None:
-        self.elements = []
-        self.surface = surface
+    elements = []
+    surface = None
+
+    @staticmethod
+    def initialize(surface):
+        GUI.surface = surface
     
-    def drawElements(self):
-        for element in self.elements:
+    @staticmethod
+    def drawElements():
+        for element in GUI.elements:
             element.draw()
     
-    def checkInput(self, ev):
-        for element in self.elements:
-            element.checkInput(ev)
+    @staticmethod
+    def checkInput(events):
+        for element in GUI.elements:
+            element.checkInput(events)
 
-    def addElement(self, element : GUIBase):
-        self.elements.append(element)
+    @staticmethod
+    def addElement(element : GUIBase):
+        GUI.elements.append(element)
 
 class Button (GUIBase):
-    def __init__(self, pos : pygame.Vector2, size : pygame.Vector2, texture, gui : GUI, func) -> None:
-        GUIBase.__init__(self, gui.surface, gui)
+    def __init__(self, pos : pygame.Vector2, size : pygame.Vector2, texture, func) -> None:
+        GUIBase.__init__(self)
         self.size = size
         self.pos = pos
         self.func = func
@@ -39,20 +44,20 @@ class Button (GUIBase):
         if texture != None:
             self.texture = pygame.transform.scale(texture, self.size)
     
-    def draw(self):
-        if self.texture == None:
+    def draw(self): # draw function which overrides GUIBase's draw function
+        if self.texture == None: # Draw a pink rectangle in case of missing texture
             rect = pygame.Rect(self.pos.x, self.pos.y, self.size.x, self.size.y)
             rect.center = self.pos
             pygame.draw.rect(self.surface, "pink", rect)
-        else:
-            self.surface.blit(self.texture, self.pos - (self.size / 2))
+        else: # Draw the texture normally
+            GUI.surface.blit(self.texture, self.pos - (self.size / 2))
 
     def checkInput(self, event):
         p = pygame.mouse.get_pos()
         clickPos = pygame.Vector2(p[0], p[1])
         
         for ev in event:
-            if ev.type == pygame.MOUSEBUTTONUP:  
+            if ev.type == pygame.MOUSEBUTTONUP: # Check if mouse input is within the rect of the button
                 left = self.pos.x - self.size.x / 2
                 right = self.pos.x + self.size.x / 2
                 top = self.pos.y - self.size.y / 2
@@ -61,8 +66,8 @@ class Button (GUIBase):
                     self.func()
 
 class Text (GUIBase):
-    def __init__(self, gui : GUI, pos, fontSize, fontPath):
-        GUIBase.__init__(self, gui.surface, gui)
+    def __init__(self, pos, fontSize, fontPath):
+        GUIBase.__init__(self)
         self.pos = pos
         self.font = pygame.font.Font(fontPath, fontSize)
         self.text = ""
@@ -70,7 +75,6 @@ class Text (GUIBase):
         self.backgroundColor = (255, 255, 255)
         self.textRender = self.font.render(self.text, True, self.textColor, self.backgroundColor) # text render is the pygame object for text, while text is a string of text
         self.textRect = self.textRender.get_rect()
-        #self.textRect = pygame.Rect(pygame.Vector2(self.pos.x - self.size.x/2, self.pos.y - self.size.y/2), self.size)
         self.textRect.center = pos
     
     def changeTextColor(self, newTextColor):
@@ -86,4 +90,8 @@ class Text (GUIBase):
         self.textRender = self.font.render(self.text, True, self.textColor, self.backgroundColor)
     
     def draw(self):
-        self.surface.blit(self.textRender, self.textRect)
+        GUI.surface.blit(self.textRender, self.textRect)
+
+class Panel (GUIBase):
+    def __init__(self, pos):
+        pass

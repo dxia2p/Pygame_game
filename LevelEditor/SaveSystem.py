@@ -2,8 +2,7 @@ import json
 import os
 
 def SaveTilemap(tilemap, path = "TilemapFiles/tilemap.json"):
-    #if not os.path.exists(path):
-    tilemapFile = open("TilemapFiles/tilemap.json", "w")
+    tilemapFile = open(path, "w")
     outputList = []
 
     for i in range(len(tilemap)):
@@ -12,8 +11,7 @@ def SaveTilemap(tilemap, path = "TilemapFiles/tilemap.json"):
                 tile = tilemap[i][j]
                 pos = tile.position
                 tileDict = {
-                    "PositionX": pos.x,
-                    "PositionY": pos.y,
+                    "Position": [pos.x, pos.y],
                     "Id": tile.tileType.id,
                 }
                 outputList.append(tileDict)
@@ -23,5 +21,13 @@ def SaveTilemap(tilemap, path = "TilemapFiles/tilemap.json"):
         tilemapFile.write(jsonObject)
     except:
         print("Error occured during saving tiles")
+    print("Finished saving tilemap")
     tilemapFile.close()
-    
+
+def LoadTilemap(path = "TilemapFiles/tilemap.json"):
+    print("AASDADKLASDLASDLJL")
+    tilemapFile = open(path, "r")
+    parsedJsonDict = json.loads(tilemapFile.read())
+    tilemapFile.close()
+    return parsedJsonDict
+
