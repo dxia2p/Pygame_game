@@ -15,14 +15,14 @@ class Tile: # class to store information about tile at position in grid
     def __init__(self, position, tileType): # important to note that position refers to the position in the tilemap's grid (position >= 0, position has to be an integer)
         self.position = position
         self.tileType = tileType
-        Tile.tilemap[int(selectedTileGridPos.x)][int(selectedTileGridPos.y)] = self
+        Tile.tilemap[int(position.x)][int(position.y)] = self
     def drawTile(self):
         Camera.drawTexture(self.tileType.texture, (self.position * self.tileType.GRID_SIZE) - pygame.Vector2(self.tileType.GRID_SIZE / 2, self.tileType.GRID_SIZE / 2), pygame.Vector2(self.tileType.GRID_SIZE, self.tileType.GRID_SIZE))
 
     @staticmethod
     def addTile(gridPosition, tileType):
         if gridPosition.x >= 0 and gridPosition.x < GRID_COLUMN_COUNT and gridPosition.y >= 0 and gridPosition.y < GRID_ROW_COUNT:
-            Tile(gridPosition, tileType)
+            return Tile(gridPosition, tileType)
         else:
             print(f"Tile position at {gridPosition.x}, {gridPosition.y} is out of bounds!")
     
@@ -108,6 +108,7 @@ tile1ImgPreview.set_alpha(128)
 tile1ImgPreview.blit(tile1Img, pygame.Vector2(0, 0))
 
 clock = pygame.time.Clock()
+
 deltaTime = 0 # time in seconds between each frame
 
 #----------------------- Save Button ---------------------------
@@ -122,19 +123,20 @@ saveButton = GuiLib.Button(pygame.Vector2(70, 60), pygame.Vector2(130, 75), save
 def loadButtonFunc():
     print("Loading tilemap...")
     tilemapData = SaveSystem.LoadTilemap()
-    print(tilemapData)
     for tileData in tilemapData:
-        print(tileData["Position"])
-        Tile.addTile(pygame.Vector2(int(tileData["Position"][0]), int(tileData["Position"][1])), TileType.tilesDict[tileData["Id"]])
+        Tile.addTile(pygame.Vector2(tileData["Position"][0], tileData["Position"][1]), TileType.tiles[0])
+        print(Tile.tilemap[int(tileData["Position"][0])][int(tileData["Position"][1])])
     print("Finished loading tilemap")
+
 
 loadButtonImg = pygame.image.load("img/LoadButton.png")
 loadButton = GuiLib.Button(pygame.Vector2(70, 160), pygame.Vector2(130, 75), loadButtonImg, loadButtonFunc)
 
 #-------------------- MAIN LOOP -------------------------
 mouseLeftButtonHeld = False # a bool to store if the mouse button is held down
-clock.tick(60)
 while running:
+    deltaTime = clock.tick(60) / 1000
+    
     events = pygame.event.get()
     for event in events:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
@@ -148,8 +150,8 @@ while running:
     # get input
     keys = pygame.key.get_pressed()
     cameraSpeed = 0
-    fastCameraSpeed = 80
-    normalCameraSpeed = 30
+    fastCameraSpeed = 800
+    normalCameraSpeed = 400
     if keys[pygame.K_LSHIFT]:
         cameraSpeed = fastCameraSpeed
     else:
@@ -163,6 +165,7 @@ while running:
         Camera.pos.x += cameraSpeed * deltaTime
     if keys[pygame.K_a]:
         Camera.pos.x -= cameraSpeed * deltaTime
+    print(cameraSpeed * deltaTime)
 
     # Mouse input
     p = pygame.mouse.get_pos()
@@ -210,8 +213,6 @@ while running:
 
     # Flip the display
     pygame.display.flip()
-    deltaTime = clock.get_time() / 1000
- 
 # Done! Time to quit.
 pygame.quit()
 sys.exit()
