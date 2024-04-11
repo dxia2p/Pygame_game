@@ -25,7 +25,6 @@ def SaveTilemap(tilemap, path = "TilemapFiles/tilemap.json"):
     tilemapFile.close()
 
 def LoadTilemap(path = "TilemapFiles/tilemap.json"):
-    print("AASDADKLASDLASDLJL")
     tilemapFile = open(path, "r")
     parsedJsonDict = json.loads(tilemapFile.read())
     tilemapFile.close()

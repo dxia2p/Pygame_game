@@ -7,8 +7,8 @@ import SaveSystem
 
 # Grid constants
 GRID_SIZE = 30
-GRID_ROW_COUNT = 54
-GRID_COLUMN_COUNT = 54
+GRID_ROW_COUNT = 51
+GRID_COLUMN_COUNT = 51
 
 class Tile: # class to store information about tile at position in grid
     tilemap = [[None] * GRID_COLUMN_COUNT for i in range(GRID_ROW_COUNT)]
@@ -23,8 +23,8 @@ class Tile: # class to store information about tile at position in grid
     def addTile(gridPosition, tileType):
         if gridPosition.x >= 0 and gridPosition.x < GRID_COLUMN_COUNT and gridPosition.y >= 0 and gridPosition.y < GRID_ROW_COUNT:
             return Tile(gridPosition, tileType)
-        else:
-            print(f"Tile position at {gridPosition.x}, {gridPosition.y} is out of bounds!")
+        #else:
+            #print(f"Tile position at {gridPosition.x}, {gridPosition.y} is out of bounds!")
     
     @staticmethod
     def removeTile(gridPosition):
@@ -35,7 +35,8 @@ class Tile: # class to store information about tile at position in grid
         Tile.tilemap[int(gridPosition.x)][int(gridPosition.y)] = None
     
     @staticmethod
-    def drawAllTiles(): # call this every frame to draw all the tiles
+    def drawAllTiles(): 
+        """This must be called every frame to draw all the tiles"""
         for i in range(len(Tile.tilemap)):
             for j in range(len(Tile.tilemap)):
                 if Tile.tilemap[i][j] != None:
@@ -47,6 +48,7 @@ class TileType: # this is for the "template" of each tile
     tilesDict = {}
 
     def onClick(self):
+        """This function is meant to be used in a Button, do not call this function directly"""
         if TileType.selectedTile == self:
             TileType.selectedTile = None
         else:
@@ -54,7 +56,7 @@ class TileType: # this is for the "template" of each tile
     def __init__(self, texture, id, GRID_SIZE):
         TileType.tiles.append(self)
         self.texture = texture
-        self.button = GuiLib.Button(pygame.Vector2(50 * len(TileType.tiles), 700), pygame.Vector2(50, 50), self.texture, self.onClick)
+        self.button = GuiLib.Button(pygame.Vector2(50 * len(TileType.tiles), 720), pygame.Vector2(50, 50), self.texture, self.onClick)
         self.id = id
         self.GRID_SIZE = GRID_SIZE
         TileType.tilesDict[id] = self
@@ -66,10 +68,12 @@ class Camera:
     
     @staticmethod
     def drawLine(color, start : pygame.Vector2, end : pygame.Vector2, width):
+        """Draws a line based in world coordinates based on the start and end values given"""
         pygame.draw.line(screen, color, start + pygame.Vector2(-Camera.pos.x, Camera.pos.y) + pygame.Vector2(Camera.size.x / 2, Camera.size.y / 2), end + pygame.Vector2(-Camera.pos.x, Camera.pos.y) + pygame.Vector2(Camera.size.x / 2, Camera.size.y / 2), width)
 
     @staticmethod
     def drawBoxOutline(color, pos, size, lineWidth):
+        """Draws the outline of a box in world coordinates based on the position, size and lineWidth given"""
         Camera.drawLine(color, pos + pygame.Vector2(-size.x / 2, size.y / 2), pos + pygame.Vector2(-size.x / 2, -size.y / 2), lineWidth)
         Camera.drawLine(color, pos + pygame.Vector2(-size.x / 2, -size.y / 2), pos + pygame.Vector2(size.x / 2, -size.y / 2), lineWidth)
         Camera.drawLine(color, pos + pygame.Vector2(size.x / 2, -size.y / 2), pos + pygame.Vector2(size.x / 2, size.y / 2), lineWidth)
@@ -77,12 +81,14 @@ class Camera:
     
     @staticmethod
     def getWorldMousePos(mousePos) -> pygame.Vector2:
+        """Returns the position of the mouse in world coordinates"""
         mousePos += pygame.Vector2(Camera.pos.x, -Camera.pos.y)
         mousePos += pygame.Vector2(-Camera.size.x / 2, -Camera.size.y / 2)
         return mousePos
     
     @staticmethod
     def drawTexture(texture, pos, size = pygame.Vector2(-1, -1)):
+        """Draws a texture in world coordinates, if the size is pygame.Vector2(-1, -1), the size of the original texture will be used"""
         if size != pygame.Vector2(-1, -1):
             texture = pygame.transform.scale(texture, size)
         Camera.screen.blit(texture, pos + pygame.Vector2(-Camera.pos.x, Camera.pos.y) + pygame.Vector2(Camera.size.x / 2, Camera.size.y / 2))
@@ -90,7 +96,7 @@ class Camera:
 # initializing things
 pygame.init()
 
-screen = pygame.display.set_mode([1024, 768])
+screen = pygame.display.set_mode([1024, 768], pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.SCALED, vsync=1)
 pygame.display.set_caption("David's Tilemap Editor")
 running = True
 
@@ -98,6 +104,9 @@ Camera.size = pygame.Vector2(1024, 768)
 Camera.screen = screen
 
 GuiLib.GUI.initialize(screen) # make gui class static???
+
+# Making a panel for the tiles to be displayed on (this is for decoration)
+tilePanel = GuiLib.Panel(pygame.Vector2(512, 720), pygame.Vector2(1024, 100), (230, 95, 85))
 
 # ----------- loading tile 1 ----------
 tile1Img = pygame.image.load('img/dirtBlock.jpg').convert_alpha()
@@ -125,9 +134,7 @@ def loadButtonFunc():
     tilemapData = SaveSystem.LoadTilemap()
     for tileData in tilemapData:
         Tile.addTile(pygame.Vector2(tileData["Position"][0], tileData["Position"][1]), TileType.tiles[0])
-        print(Tile.tilemap[int(tileData["Position"][0])][int(tileData["Position"][1])])
     print("Finished loading tilemap")
-
 
 loadButtonImg = pygame.image.load("img/LoadButton.png")
 loadButton = GuiLib.Button(pygame.Vector2(70, 160), pygame.Vector2(130, 75), loadButtonImg, loadButtonFunc)
@@ -135,16 +142,16 @@ loadButton = GuiLib.Button(pygame.Vector2(70, 160), pygame.Vector2(130, 75), loa
 #-------------------- MAIN LOOP -------------------------
 mouseLeftButtonHeld = False # a bool to store if the mouse button is held down
 while running:
-    deltaTime = clock.tick(60) / 1000
-    
+    deltaTime = clock.tick() / 1000
+
     events = pygame.event.get()
     for event in events:
         if event.type == pygame.MOUSEBUTTONDOWN and event.button == 1:
             mouseLeftButtonHeld = True
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             mouseLeftButtonHeld = False
+        
     # Fill the background with grey
-    screen.fill((200, 200, 200))
     screen.fill((255, 255, 255))
 
     # get input
@@ -165,26 +172,28 @@ while running:
         Camera.pos.x += cameraSpeed * deltaTime
     if keys[pygame.K_a]:
         Camera.pos.x -= cameraSpeed * deltaTime
-    print(cameraSpeed * deltaTime)
 
     # Mouse input
-    p = pygame.mouse.get_pos()
-    mousePos = pygame.Vector2(p[0], p[1])
-    mousePos = Camera.getWorldMousePos(mousePos)
+    screenMousePos = pygame.mouse.get_pos()
+    screenMousePos = pygame.Vector2(screenMousePos[0], screenMousePos[1]) # must convert to a vector2
+    positionIsOnGUI = GuiLib.GUI.positionIsOnGUI(screenMousePos)
+
+    mousePos = Camera.getWorldMousePos(screenMousePos)
     mousePos = pygame.Vector2(round(mousePos.x / GRID_SIZE) * GRID_SIZE, round(mousePos.y / GRID_SIZE) * GRID_SIZE) - pygame.Vector2(GRID_SIZE / 2, GRID_SIZE / 2)
     selectedTileGridPos = pygame.Vector2(int((mousePos.x + GRID_SIZE / 2) / GRID_SIZE), int((mousePos.y + GRID_SIZE / 2) / GRID_SIZE))
     # draw a preview of the tile at the mouse poisition if it is selected
-    if TileType.selectedTile != None:
+    if TileType.selectedTile != None and (not positionIsOnGUI):
         Camera.drawTexture(tile1ImgPreview, mousePos, pygame.Vector2(30, 30))
         for event in events:
             if mouseLeftButtonHeld:
                 Tile.addTile(selectedTileGridPos, TileType.selectedTile)
 
-    # Removing tiles
-    for event in events:
-            if event.type == pygame.MOUSEBUTTONDOWN:
-                if event.button == 3:
-                    Tile.removeTile(selectedTileGridPos)
+    if not positionIsOnGUI:
+        # Removing tiles
+        for event in events:
+                if event.type == pygame.MOUSEBUTTONDOWN:
+                    if event.button == 3:
+                        Tile.removeTile(selectedTileGridPos)
 
     # ------------------------- draw the grid ----------------------
     width = GRID_COLUMN_COUNT * GRID_SIZE

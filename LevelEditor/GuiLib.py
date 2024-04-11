@@ -2,8 +2,9 @@ import pygame
 import sys
 
 class GUIBase:
-    def __init__(self) -> None:
+    def __init__(self, rect : pygame.Rect) -> None:
         GUI.addElement(self)
+        self.rect = rect
         pass
 
     def draw(self):
@@ -11,6 +12,12 @@ class GUIBase:
     
     def checkInput(self, event):
         pass
+
+    def checkPositionIsInElement(self, position : pygame.Vector2) -> bool:
+        """Checks if the given position is inside the rect of this element"""
+        if position.x < self.rect.right and position.x > self.rect.left and position.y > self.rect.top and position.y < self.rect.bottom:
+            return True
+        return False
 
 class GUI:
     elements = []
@@ -34,9 +41,23 @@ class GUI:
     def addElement(element : GUIBase):
         GUI.elements.append(element)
 
+    @staticmethod
+    def positionIsOnGUI(position):
+        """
+        Checks if the position given overlaps with any GUI element. This can be useful for preventing the user from performing actions in a game while clicking on the UI.
+        """
+        for element in GUI.elements:
+            if element.checkPositionIsInElement(position):
+                return True
+        return False
+
+        
+
+
 class Button (GUIBase):
     def __init__(self, pos : pygame.Vector2, size : pygame.Vector2, texture, func) -> None:
-        GUIBase.__init__(self)
+        rect = pygame.Rect(pos.x - size.x / 2, pos.y - size.y / 2, size.x, size.y)
+        GUIBase.__init__(self, rect)
         self.size = size
         self.pos = pos
         self.func = func
@@ -67,15 +88,17 @@ class Button (GUIBase):
 
 class Text (GUIBase):
     def __init__(self, pos, fontSize, fontPath):
-        GUIBase.__init__(self)
+        
         self.pos = pos
         self.font = pygame.font.Font(fontPath, fontSize)
         self.text = ""
         self.textColor = (0, 0, 0)
         self.backgroundColor = (255, 255, 255)
         self.textRender = self.font.render(self.text, True, self.textColor, self.backgroundColor) # text render is the pygame object for text, while text is a string of text
-        self.textRect = self.textRender.get_rect()
-        self.textRect.center = pos
+        
+        rect = self.textRender.get_rect()
+        rect.center = pos
+        GUIBase.__init__(self, rect)
     
     def changeTextColor(self, newTextColor):
         self.textColor = newTextColor
@@ -90,8 +113,15 @@ class Text (GUIBase):
         self.textRender = self.font.render(self.text, True, self.textColor, self.backgroundColor)
     
     def draw(self):
-        GUI.surface.blit(self.textRender, self.textRect)
+        GUI.surface.blit(self.textRender, self.rect)
 
 class Panel (GUIBase):
-    def __init__(self, pos):
-        pass
+    def __init__(self, pos, size, color):
+        rect = pygame.Rect(pos.x - size.x / 2, pos.y - size.y / 2, size.x, size.y)
+        GUIBase.__init__(self, rect)
+        self.pos = pos
+        self.size = size
+        self.color = color
+    
+    def draw(self):
+        pygame.draw.rect(GUI.surface, self.color, pygame.Rect(self.pos.x - self.size.x / 2, self.pos.y - self.size.y / 2, self.size.x, self.size.y))
