@@ -1,7 +1,18 @@
 import json
 import os
 
-def SaveTilemap(tilemap, path = "TilemapFiles/tilemap.json"):
+def SaveTileTypes(tileTypes, path = "TileFiles/tileTypes.json"):
+    tileTypesFile = open(path, "w")
+    outputList = []
+
+    for tileType in tileTypes:
+        pass
+
+
+def LoadTileTypes(path = "TileFiles/tileTypes.json"):
+    pass
+
+def SaveTilemap(tilemap, path = "TileFiles/tilemap.json"):
     tilemapFile = open(path, "w")
     outputList = []
 
@@ -24,7 +35,7 @@ def SaveTilemap(tilemap, path = "TilemapFiles/tilemap.json"):
     print("Finished saving tilemap")
     tilemapFile.close()
 
-def LoadTilemap(path = "TilemapFiles/tilemap.json"):
+def LoadTilemap(path = "TileFiles/tilemap.json"):
     tilemapFile = open(path, "r")
     parsedJsonDict = json.loads(tilemapFile.read())
     tilemapFile.close()

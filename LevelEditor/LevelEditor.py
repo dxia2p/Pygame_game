@@ -4,6 +4,8 @@ import GuiLib as GuiLib
 import sys
 import os
 import SaveSystem
+from tkinter import filedialog
+from PIL import Image
 
 # Grid constants
 GRID_SIZE = 30
@@ -30,7 +32,7 @@ class Tile: # class to store information about tile at position in grid
     def removeTile(gridPosition):
         t = Tile.tilemap[int(gridPosition.x)][int(gridPosition.y)]
         if t == None:
-            print(f"Invalid tile, could not remove tile at {gridPosition.x}, {gridPosition.y}")
+            #print(f"Invalid tile, could not remove tile at {gridPosition.x}, {gridPosition.y}")
             return
         Tile.tilemap[int(gridPosition.x)][int(gridPosition.y)] = None
     
@@ -53,13 +55,29 @@ class TileType: # this is for the "template" of each tile
             TileType.selectedTile = None
         else:
             TileType.selectedTile = self
-    def __init__(self, texture, id, GRID_SIZE):
+
+    def __init__(self, texture, id, GRID_SIZE, previewImg, texturePath):
         TileType.tiles.append(self)
         self.texture = texture
-        self.button = GuiLib.Button(pygame.Vector2(50 * len(TileType.tiles), 720), pygame.Vector2(50, 50), self.texture, self.onClick)
+        self.button = GuiLib.Button(pygame.Vector2(60 * len(TileType.tiles), 720), pygame.Vector2(50, 50), self.texture, self.onClick)
         self.id = id
         self.GRID_SIZE = GRID_SIZE
+        self.previewImg = previewImg
+        self.texturePath = texturePath
         TileType.tilesDict[id] = self
+
+    @staticmethod
+    def addTileType(texturePath, GRID_SIZE):
+        newTileImg = pygame.image.load(texturePath).convert_alpha()
+        newTileImgPreview = pygame.Surface((newTileImg.get_width(), newTileImg.get_height()), pygame.SRCALPHA)
+        newTileImgPreview.set_alpha(128)
+        newTileImgPreview.blit(newTileImg, pygame.Vector2(0, 0))
+        # Create the new tile
+        TileType(newTileImg, len(TileType.tiles), GRID_SIZE, newTileImgPreview, texturePath)
+
+    @staticmethod 
+    def removeTileType():
+        pass
 
 class Camera:
     size = pygame.Vector2(0, 0)
@@ -109,18 +127,18 @@ GuiLib.GUI.initialize(screen) # make gui class static???
 tilePanel = GuiLib.Panel(pygame.Vector2(512, 720), pygame.Vector2(1024, 100), (230, 95, 85))
 
 # ----------- loading tile 1 ----------
-tile1Img = pygame.image.load('img/dirtBlock.jpg').convert_alpha()
+tile1Img = pygame.image.load("img/dirtBlock.jpg").convert_alpha()
 
-tile1 = TileType(tile1Img, 0, GRID_SIZE)
 tile1ImgPreview = pygame.Surface((tile1Img.get_width(), tile1Img.get_height()), pygame.SRCALPHA)
 tile1ImgPreview.set_alpha(128)
 tile1ImgPreview.blit(tile1Img, pygame.Vector2(0, 0))
+tile1 = TileType(tile1Img, 0, GRID_SIZE, tile1ImgPreview, "img/dirtBlock.jpg")
 
 clock = pygame.time.Clock()
 
 deltaTime = 0 # time in seconds between each frame
 
-#----------------------- Save Button ---------------------------
+#----------------------- Save Tiles Button ---------------------------
 def saveButtonFunc():
     print("Saving tilemap...")
     SaveSystem.SaveTilemap(Tile.tilemap)
@@ -128,19 +146,28 @@ def saveButtonFunc():
 saveButtonImg = pygame.image.load("img/SaveButton.png")
 saveButton = GuiLib.Button(pygame.Vector2(70, 60), pygame.Vector2(130, 75), saveButtonImg, saveButtonFunc)
 
-#----------------------- Load Button -----------------------------
+#----------------------- Load Tiles Button -----------------------------
 def loadButtonFunc():
     print("Loading tilemap...")
     tilemapData = SaveSystem.LoadTilemap()
     for tileData in tilemapData:
-        Tile.addTile(pygame.Vector2(tileData["Position"][0], tileData["Position"][1]), TileType.tiles[0])
+        Tile.addTile(pygame.Vector2(tileData["Position"][0], tileData["Position"][1]), TileType.tiles[tileData["id"]])
     print("Finished loading tilemap")
 
 loadButtonImg = pygame.image.load("img/LoadButton.png")
 loadButton = GuiLib.Button(pygame.Vector2(70, 160), pygame.Vector2(130, 75), loadButtonImg, loadButtonFunc)
 
+# ---------------------------- Add Tile Button --------------------
+def addTileFunc():
+    filename = filedialog.askopenfilename(initialdir="/", title="select an image for new tile", filetypes=(("JPG File","*.jpg*"), ("PNG File","*.png*"),("all files", "*.*")))
+    TileType.addTileType(filename, GRID_SIZE)
+
+addTileButtonImg = pygame.image.load("img/PlusButton.png")
+addTileButton = GuiLib.Button(pygame.Vector2(980, 720), pygame.Vector2(50, 50), addTileButtonImg, addTileFunc)
+
 #-------------------- MAIN LOOP -------------------------
 mouseLeftButtonHeld = False # a bool to store if the mouse button is held down
+mouseRightButtonHeld = False
 while running:
     deltaTime = clock.tick() / 1000
 
@@ -151,6 +178,11 @@ while running:
         elif event.type == pygame.MOUSEBUTTONUP and event.button == 1:
             mouseLeftButtonHeld = False
         
+        if event.type == pygame.MOUSEBUTTONDOWN and event.button == 3:
+            mouseRightButtonHeld = True
+        elif event.type == pygame.MOUSEBUTTONUP and event.button == 3:
+            mouseRightButtonHeld = False
+
     # Fill the background with grey
     screen.fill((255, 255, 255))
 
@@ -183,17 +215,13 @@ while running:
     selectedTileGridPos = pygame.Vector2(int((mousePos.x + GRID_SIZE / 2) / GRID_SIZE), int((mousePos.y + GRID_SIZE / 2) / GRID_SIZE))
     # draw a preview of the tile at the mouse poisition if it is selected
     if TileType.selectedTile != None and (not positionIsOnGUI):
-        Camera.drawTexture(tile1ImgPreview, mousePos, pygame.Vector2(30, 30))
-        for event in events:
-            if mouseLeftButtonHeld:
-                Tile.addTile(selectedTileGridPos, TileType.selectedTile)
+        Camera.drawTexture(TileType.selectedTile.previewImg, mousePos, pygame.Vector2(30, 30))
+        if mouseLeftButtonHeld:
+            Tile.addTile(selectedTileGridPos, TileType.selectedTile)
 
-    if not positionIsOnGUI:
+    if not positionIsOnGUI and mouseRightButtonHeld:
         # Removing tiles
-        for event in events:
-                if event.type == pygame.MOUSEBUTTONDOWN:
-                    if event.button == 3:
-                        Tile.removeTile(selectedTileGridPos)
+        Tile.removeTile(selectedTileGridPos)
 
     # ------------------------- draw the grid ----------------------
     width = GRID_COLUMN_COUNT * GRID_SIZE
