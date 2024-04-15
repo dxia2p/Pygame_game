@@ -14,17 +14,17 @@ GRID_COLUMN_COUNT = 51
 
 class Tile: # class to store information about tile at position in grid
     tilemap = [[None] * GRID_COLUMN_COUNT for i in range(GRID_ROW_COUNT)]
-    def __init__(self, position, tileType): # important to note that position refers to the position in the tilemap's grid (position >= 0, position has to be an integer)
+    def __init__(self, position, tileTemplate): # important to note that position refers to the position in the tilemap's grid (position >= 0, position has to be an integer)
         self.position = position
-        self.tileType = tileType
+        self.tileTemplate = tileTemplate
         Tile.tilemap[int(position.x)][int(position.y)] = self
     def drawTile(self):
-        Camera.drawTexture(self.tileType.texture, (self.position * self.tileType.GRID_SIZE) - pygame.Vector2(self.tileType.GRID_SIZE / 2, self.tileType.GRID_SIZE / 2), pygame.Vector2(self.tileType.GRID_SIZE, self.tileType.GRID_SIZE))
+        Camera.drawTexture(self.tileTemplate.texture, (self.position * GRID_SIZE) - pygame.Vector2(GRID_SIZE / 2, GRID_SIZE / 2), pygame.Vector2(GRID_SIZE, GRID_SIZE))
 
     @staticmethod
-    def addTile(gridPosition, tileType):
+    def addTile(gridPosition, tileTemplate):
         if gridPosition.x >= 0 and gridPosition.x < GRID_COLUMN_COUNT and gridPosition.y >= 0 and gridPosition.y < GRID_ROW_COUNT:
-            return Tile(gridPosition, tileType)
+            return Tile(gridPosition, tileTemplate)
         #else:
             #print(f"Tile position at {gridPosition.x}, {gridPosition.y} is out of bounds!")
     
@@ -44,39 +44,58 @@ class Tile: # class to store information about tile at position in grid
                 if Tile.tilemap[i][j] != None:
                     Tile.tilemap[i][j].drawTile()
 
-class TileType: # this is for the "template" of each tile
+class TileTemplate: # this is for the "template" of each tile
     selectedTile = None
     tiles = []
-    tilesDict = {}
+
+    increaseIdButtonTexture = None
+    decreaseIdButtonTexture = None
 
     def onClick(self):
         """This function is meant to be used in a Button, do not call this function directly"""
-        if TileType.selectedTile == self:
-            TileType.selectedTile = None
+        if TileTemplate.selectedTile == self:
+            TileTemplate.selectedTile = None
         else:
-            TileType.selectedTile = self
+            TileTemplate.selectedTile = self
 
-    def __init__(self, texture, id, GRID_SIZE, previewImg, texturePath):
-        TileType.tiles.append(self)
+    def onIncreaseIdButtonClick(self):
+        self.id += 1
+        self.idText.changeText(str(self.id))
+
+    def onDecreaseIdButtonClick(self):
+        self.id -= 1
+        self.idText.changeText(str(self.id))
+
+    def __init__(self, texture, id, previewImg, texturePath):
+        TileTemplate.tiles.append(self)
         self.texture = texture
-        self.button = GuiLib.Button(pygame.Vector2(60 * len(TileType.tiles), 720), pygame.Vector2(50, 50), self.texture, self.onClick)
         self.id = id
-        self.GRID_SIZE = GRID_SIZE
         self.previewImg = previewImg
         self.texturePath = texturePath
-        TileType.tilesDict[id] = self
+
+        # GUI stuff
+        guiPos = pygame.Vector2(60 * len(TileTemplate.tiles), 720)
+        guiSize = pygame.Vector2(50, 50)
+        guiIdButtonSize = pygame.Vector2(15, 15)
+        self.button = GuiLib.Button(guiPos, guiSize, self.texture, self.onClick)
+        self.increaseIdButton = GuiLib.Button(guiPos + pygame.Vector2(20, 32.5), guiIdButtonSize, TileTemplate.increaseIdButtonTexture, self.onIncreaseIdButtonClick)
+        self.decreaseIdButton = GuiLib.Button(guiPos + pygame.Vector2(-20, 32.5), guiIdButtonSize, TileTemplate.decreaseIdButtonTexture, self.onDecreaseIdButtonClick)
+        self.idText = GuiLib.Text(guiPos + pygame.Vector2(0, 42), 14, "Roboto/Roboto-Bold.ttf")
+        self.idText.changeText(str(self.id))
+        self.idText.changeBackgroundColor((230, 95, 85))
+        self.idText.changeTextColor((255, 255, 255))
 
     @staticmethod
-    def addTileType(texturePath, GRID_SIZE):
+    def addTileTemplate(texturePath):
         newTileImg = pygame.image.load(texturePath).convert_alpha()
         newTileImgPreview = pygame.Surface((newTileImg.get_width(), newTileImg.get_height()), pygame.SRCALPHA)
         newTileImgPreview.set_alpha(128)
         newTileImgPreview.blit(newTileImg, pygame.Vector2(0, 0))
         # Create the new tile
-        TileType(newTileImg, len(TileType.tiles), GRID_SIZE, newTileImgPreview, texturePath)
+        TileTemplate(newTileImg, len(TileTemplate.tiles), newTileImgPreview, texturePath)
 
     @staticmethod 
-    def removeTileType():
+    def removeTileTemplate():
         pass
 
 class Camera:
@@ -102,6 +121,7 @@ class Camera:
         """Returns the position of the mouse in world coordinates"""
         mousePos += pygame.Vector2(Camera.pos.x, -Camera.pos.y)
         mousePos += pygame.Vector2(-Camera.size.x / 2, -Camera.size.y / 2)
+        print(mousePos)
         return mousePos
     
     @staticmethod
@@ -121,10 +141,14 @@ running = True
 Camera.size = pygame.Vector2(1024, 768)
 Camera.screen = screen
 
-GuiLib.GUI.initialize(screen) # make gui class static???
+GuiLib.GUI.initialize(screen)
 
 # Making a panel for the tiles to be displayed on (this is for decoration)
 tilePanel = GuiLib.Panel(pygame.Vector2(512, 720), pygame.Vector2(1024, 100), (230, 95, 85))
+
+# must load the increasea and decrease id buttons here because they cannot load before pygame.display is initialized
+TileTemplate.increaseIdButtonTexture = pygame.image.load("img/plusButton2.png").convert_alpha()
+TileTemplate.decreaseIdButtonTexture = pygame.image.load("img/minusButton.png").convert_alpha()
 
 # ----------- loading tile 1 ----------
 tile1Img = pygame.image.load("img/dirtBlock.jpg").convert_alpha()
@@ -132,7 +156,7 @@ tile1Img = pygame.image.load("img/dirtBlock.jpg").convert_alpha()
 tile1ImgPreview = pygame.Surface((tile1Img.get_width(), tile1Img.get_height()), pygame.SRCALPHA)
 tile1ImgPreview.set_alpha(128)
 tile1ImgPreview.blit(tile1Img, pygame.Vector2(0, 0))
-tile1 = TileType(tile1Img, 0, GRID_SIZE, tile1ImgPreview, "img/dirtBlock.jpg")
+tile1 = TileTemplate(tile1Img, 0, tile1ImgPreview, "img/dirtBlock.jpg")
 
 clock = pygame.time.Clock()
 
@@ -151,7 +175,7 @@ def loadButtonFunc():
     print("Loading tilemap...")
     tilemapData = SaveSystem.LoadTilemap()
     for tileData in tilemapData:
-        Tile.addTile(pygame.Vector2(tileData["Position"][0], tileData["Position"][1]), TileType.tiles[tileData["id"]])
+        Tile.addTile(pygame.Vector2(tileData["Position"][0], tileData["Position"][1]), TileTemplate.tiles[tileData["Id"]])
     print("Finished loading tilemap")
 
 loadButtonImg = pygame.image.load("img/LoadButton.png")
@@ -160,7 +184,7 @@ loadButton = GuiLib.Button(pygame.Vector2(70, 160), pygame.Vector2(130, 75), loa
 # ---------------------------- Add Tile Button --------------------
 def addTileFunc():
     filename = filedialog.askopenfilename(initialdir="/", title="select an image for new tile", filetypes=(("JPG File","*.jpg*"), ("PNG File","*.png*"),("all files", "*.*")))
-    TileType.addTileType(filename, GRID_SIZE)
+    TileTemplate.addTileTemplate(filename)
 
 addTileButtonImg = pygame.image.load("img/PlusButton.png")
 addTileButton = GuiLib.Button(pygame.Vector2(980, 720), pygame.Vector2(50, 50), addTileButtonImg, addTileFunc)
@@ -214,10 +238,10 @@ while running:
     mousePos = pygame.Vector2(round(mousePos.x / GRID_SIZE) * GRID_SIZE, round(mousePos.y / GRID_SIZE) * GRID_SIZE) - pygame.Vector2(GRID_SIZE / 2, GRID_SIZE / 2)
     selectedTileGridPos = pygame.Vector2(int((mousePos.x + GRID_SIZE / 2) / GRID_SIZE), int((mousePos.y + GRID_SIZE / 2) / GRID_SIZE))
     # draw a preview of the tile at the mouse poisition if it is selected
-    if TileType.selectedTile != None and (not positionIsOnGUI):
-        Camera.drawTexture(TileType.selectedTile.previewImg, mousePos, pygame.Vector2(30, 30))
+    if TileTemplate.selectedTile != None and (not positionIsOnGUI):
+        Camera.drawTexture(TileTemplate.selectedTile.previewImg, mousePos, pygame.Vector2(30, 30))
         if mouseLeftButtonHeld:
-            Tile.addTile(selectedTileGridPos, TileType.selectedTile)
+            Tile.addTile(selectedTileGridPos, TileTemplate.selectedTile)
 
     if not positionIsOnGUI and mouseRightButtonHeld:
         # Removing tiles

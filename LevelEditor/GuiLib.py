@@ -97,7 +97,6 @@ class Text (GUIBase):
         self.textRender = self.font.render(self.text, True, self.textColor, self.backgroundColor) # text render is the pygame object for text, while text is a string of text
         
         rect = self.textRender.get_rect()
-        rect.center = pos
         GUIBase.__init__(self, rect)
     
     def changeTextColor(self, newTextColor):
@@ -111,7 +110,10 @@ class Text (GUIBase):
     def changeText(self, newText):
         self.text = newText
         self.textRender = self.font.render(self.text, True, self.textColor, self.backgroundColor)
-    
+        width = self.textRender.get_rect().width
+        height = self.textRender.get_rect().height
+        self.rect.center = pygame.Vector2(self.pos.x - width / 2, self.pos.y - height / 2)
+
     def draw(self):
         GUI.surface.blit(self.textRender, self.rect)
 
