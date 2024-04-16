@@ -2,10 +2,8 @@ import pygame
 import pygame.math
 import GuiLib as GuiLib
 import sys
-import os
 import SaveSystem
 from tkinter import filedialog
-from PIL import Image
 
 # Grid constants
 GRID_SIZE = 30
