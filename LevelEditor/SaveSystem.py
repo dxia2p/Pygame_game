@@ -7,8 +7,8 @@ def SaveTileTemplates(tileTemplates, path = "TileFiles/tileTemplates.json"):
 
     for tileTemplate in tileTemplates:
         tileTemplateDict = {
-            "path": tileTemplate.texturePath,
-            "id": tileTemplate.id
+            "Path": tileTemplate.texturePath,
+            "Id": tileTemplate.id
         }
         outputList.append(tileTemplateDict)
     
@@ -20,12 +20,11 @@ def SaveTileTemplates(tileTemplates, path = "TileFiles/tileTemplates.json"):
     print("Finished saving tile templates")
     tileTemplatesFile.close()
 
-def LoadFileTemplates(tileTemplates, path = "TileFiles/tileTypes.json"):
+def LoadTileTemplates(path = "TileFiles/tileTemplates.json"):
     tileTemplatesFile = open(path, "r")
     parsedJsonData = json.loads(tileTemplatesFile.read())
     tileTemplatesFile.close()
-    for tileTemplate in parsedJsonData:
-        pass
+    return parsedJsonData
 
 def SaveTilemap(tilemap, path = "TileFiles/tilemap.json"):
     tilemapFile = open(path, "w")

@@ -51,6 +51,10 @@ class GUI:
                 return True
         return False
 
+    @staticmethod
+    def removeElement(element):
+        GUI.elements.remove(element)
+
         
 
 

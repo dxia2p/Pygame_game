@@ -4,6 +4,7 @@ import GuiLib as GuiLib
 import sys
 import SaveSystem
 from tkinter import filedialog
+import gc
 
 # Grid constants
 GRID_SIZE = 30
@@ -64,6 +65,10 @@ class TileTemplate: # this is for the "template" of each tile
         self.id -= 1
         self.idText.changeText(str(self.id))
 
+    def changeId(self, newId):
+        self.id = newId
+        self.idText.changeText(str(newId))
+
     def __init__(self, texture, id, previewImg, texturePath):
         TileTemplate.tiles.append(self)
         self.texture = texture
@@ -90,11 +95,18 @@ class TileTemplate: # this is for the "template" of each tile
         newTileImgPreview.set_alpha(128)
         newTileImgPreview.blit(newTileImg, pygame.Vector2(0, 0))
         # Create the new tile
-        TileTemplate(newTileImg, len(TileTemplate.tiles), newTileImgPreview, texturePath)
+        return TileTemplate(newTileImg, len(TileTemplate.tiles), newTileImgPreview, texturePath)
 
-    @staticmethod 
+    @staticmethod
     def removeTileTemplate():
         pass
+
+    @staticmethod
+    def findTileTemplateById(id): # I created this function instead of using a dictionary with id as key because the id of the tile could change very frequently, and constantly creating new dictionary elements with the new id would probably not be performant
+        for tileTemplate in TileTemplate.tiles:
+            if tileTemplate.id == id:
+                return tileTemplate
+        return None
 
 class Camera:
     size = pygame.Vector2(0, 0)
@@ -119,7 +131,6 @@ class Camera:
         """Returns the position of the mouse in world coordinates"""
         mousePos += pygame.Vector2(Camera.pos.x, -Camera.pos.y)
         mousePos += pygame.Vector2(-Camera.size.x / 2, -Camera.size.y / 2)
-        print(mousePos)
         return mousePos
     
     @staticmethod
@@ -162,18 +173,39 @@ deltaTime = 0 # time in seconds between each frame
 
 #----------------------- Save Tiles Button ---------------------------
 def saveButtonFunc():
-    print("Saving tilemap...")
+    print("Saving tilemap and templates...")
     SaveSystem.SaveTilemap(Tile.tilemap)
+    SaveSystem.SaveTileTemplates(TileTemplate.tiles)
 
 saveButtonImg = pygame.image.load("img/SaveButton.png")
 saveButton = GuiLib.Button(pygame.Vector2(70, 60), pygame.Vector2(130, 75), saveButtonImg, saveButtonFunc)
 
 #----------------------- Load Tiles Button -----------------------------
 def loadButtonFunc():
-    print("Loading tilemap...")
+    print("Loading tilemap and templates...")
+    # Loading the tile templates
+    for t in TileTemplate.tiles: # Clearing GUI elements on the TileTemplates
+        GuiLib.GUI.removeElement(t.button)
+        GuiLib.GUI.removeElement(t.idText)
+        GuiLib.GUI.removeElement(t.increaseIdButton)
+        GuiLib.GUI.removeElement(t.decreaseIdButton)
+
+    TileTemplate.tiles = [] # clearing TileTemplates
+    TileTemplate.selectedTile = None
+
+    tileTemplatesData = SaveSystem.LoadTileTemplates()
+    for tileTemplateDataElement in tileTemplatesData:
+        t = TileTemplate.addTileTemplate(tileTemplateDataElement["Path"])
+        t.changeId(tileTemplateDataElement["Id"])
+
+
+    # Loading the tilemap
+    for i in range(len(Tile.tilemap)): # Clearing the tilemap
+        for j in range(len(Tile.tilemap[i])):
+            Tile.tilemap[i][j] = None
     tilemapData = SaveSystem.LoadTilemap()
     for tileData in tilemapData:
-        Tile.addTile(pygame.Vector2(tileData["Position"][0], tileData["Position"][1]), TileTemplate.tiles[tileData["Id"]])
+        Tile.addTile(pygame.Vector2(tileData["Position"][0], tileData["Position"][1]), TileTemplate.findTileTemplateById(tileData["Id"]))
     print("Finished loading tilemap")
 
 loadButtonImg = pygame.image.load("img/LoadButton.png")
