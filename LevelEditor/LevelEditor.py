@@ -5,6 +5,7 @@ import sys
 import SaveSystem
 from tkinter import filedialog
 import gc
+import os
 
 # Grid constants
 GRID_SIZE = 30
@@ -28,7 +29,7 @@ class Tile: # class to store information about tile at position in grid
             #print(f"Tile position at {gridPosition.x}, {gridPosition.y} is out of bounds!")
     
     @staticmethod
-    def removeTile(gridPosition):
+    def removeTileAtPos(gridPosition):
         t = Tile.tilemap[int(gridPosition.x)][int(gridPosition.y)]
         if t == None:
             #print(f"Invalid tile, could not remove tile at {gridPosition.x}, {gridPosition.y}")
@@ -42,6 +43,13 @@ class Tile: # class to store information about tile at position in grid
             for j in range(len(Tile.tilemap)):
                 if Tile.tilemap[i][j] != None:
                     Tile.tilemap[i][j].drawTile()
+    
+    @staticmethod
+    def removeTileByTemplate(template):
+        for i in range(len(Tile.tilemap)):
+            for j in range(len(Tile.tilemap[i])):
+                if Tile.tilemap[i][j] != None and Tile.tilemap[i][j].tileTemplate == template:
+                    Tile.removeTileAtPos(pygame.Vector2(i, j))
 
 class TileTemplate: # this is for the "template" of each tile
     selectedTile = None
@@ -49,6 +57,7 @@ class TileTemplate: # this is for the "template" of each tile
 
     increaseIdButtonTexture = None
     decreaseIdButtonTexture = None
+    deleteButtonTexture = None
 
     def onClick(self):
         """This function is meant to be used in a Button, do not call this function directly"""
@@ -68,6 +77,10 @@ class TileTemplate: # this is for the "template" of each tile
     def changeId(self, newId):
         self.id = newId
         self.idText.changeText(str(newId))
+    
+    def onDeleteButtonClick(self):
+        TileTemplate.removeTileTemplate(self)
+        print("ASDADA")
 
     def __init__(self, texture, id, previewImg, texturePath):
         TileTemplate.tiles.append(self)
@@ -80,13 +93,18 @@ class TileTemplate: # this is for the "template" of each tile
         guiPos = pygame.Vector2(60 * len(TileTemplate.tiles), 720)
         guiSize = pygame.Vector2(50, 50)
         guiIdButtonSize = pygame.Vector2(15, 15)
+        
         self.button = GuiLib.Button(guiPos, guiSize, self.texture, self.onClick)
+        
         self.increaseIdButton = GuiLib.Button(guiPos + pygame.Vector2(20, 32.5), guiIdButtonSize, TileTemplate.increaseIdButtonTexture, self.onIncreaseIdButtonClick)
         self.decreaseIdButton = GuiLib.Button(guiPos + pygame.Vector2(-20, 32.5), guiIdButtonSize, TileTemplate.decreaseIdButtonTexture, self.onDecreaseIdButtonClick)
+        
         self.idText = GuiLib.Text(guiPos + pygame.Vector2(0, 42), 14, "Roboto/Roboto-Bold.ttf")
         self.idText.changeText(str(self.id))
         self.idText.changeBackgroundColor((230, 95, 85))
         self.idText.changeTextColor((255, 255, 255))
+
+        self.deleteButton = GuiLib.Button(guiPos + pygame.Vector2(-15, -35), pygame.Vector2(20, 20), TileTemplate.deleteButtonTexture, self.onDeleteButtonClick)
 
     @staticmethod
     def addTileTemplate(texturePath):
@@ -98,8 +116,28 @@ class TileTemplate: # this is for the "template" of each tile
         return TileTemplate(newTileImg, len(TileTemplate.tiles), newTileImgPreview, texturePath)
 
     @staticmethod
-    def removeTileTemplate():
-        pass
+    def removeTileTemplate(templateToRemove):
+        # Shift all gui elements to the left
+        print("ASDSADA" + str(templateToRemove.id))
+        index = TileTemplate.tiles.index(templateToRemove)
+        for i in range(index + 1, len(TileTemplate.tiles)):
+            print(i)
+            TileTemplate.tiles[i].button.pos.x -= 60
+            TileTemplate.tiles[i].increaseIdButton.pos.x -= 60
+            TileTemplate.tiles[i].decreaseIdButton.pos.x -= 60
+            TileTemplate.tiles[i].deleteButton.pos.x -= 60
+            TileTemplate.tiles[i].idText.pos.x -= 60
+            TileTemplate.tiles[i].idText.changeText(TileTemplate.tiles[i].idText.text)
+        
+        # Remove all GUI elements on the templateToRemove
+        Tile.removeTileByTemplate(templateToRemove)
+        GuiLib.GUI.removeElement(templateToRemove.button)
+        GuiLib.GUI.removeElement(templateToRemove.idText)
+        GuiLib.GUI.removeElement(templateToRemove.increaseIdButton)
+        GuiLib.GUI.removeElement(templateToRemove.decreaseIdButton)
+        GuiLib.GUI.removeElement(templateToRemove.deleteButton)
+        TileTemplate.tiles.remove(templateToRemove)
+        TileTemplate.selectedTile = None
 
     @staticmethod
     def findTileTemplateById(id): # I created this function instead of using a dictionary with id as key because the id of the tile could change very frequently, and constantly creating new dictionary elements with the new id would probably not be performant
@@ -109,7 +147,7 @@ class TileTemplate: # this is for the "template" of each tile
         return None
 
 class Camera:
-    size = pygame.Vector2(0, 0)
+    size = pygame.Vector2(0, 0) # currently the objects drawn by the camera do not scale with its size, this can be added later
     screen = None
     pos = pygame.Vector2(0, 0)
     
@@ -140,7 +178,7 @@ class Camera:
             texture = pygame.transform.scale(texture, size)
         Camera.screen.blit(texture, pos + pygame.Vector2(-Camera.pos.x, Camera.pos.y) + pygame.Vector2(Camera.size.x / 2, Camera.size.y / 2))
 
-# initializing things
+# ----------------------- initializing things -------------------
 pygame.init()
 
 screen = pygame.display.set_mode([1024, 768], pygame.HWSURFACE | pygame.DOUBLEBUF | pygame.SCALED, vsync=1)
@@ -158,14 +196,10 @@ tilePanel = GuiLib.Panel(pygame.Vector2(512, 720), pygame.Vector2(1024, 100), (2
 # must load the increasea and decrease id buttons here because they cannot load before pygame.display is initialized
 TileTemplate.increaseIdButtonTexture = pygame.image.load("img/plusButton2.png").convert_alpha()
 TileTemplate.decreaseIdButtonTexture = pygame.image.load("img/minusButton.png").convert_alpha()
+TileTemplate.deleteButtonTexture = pygame.image.load("img/trashIcon.png").convert_alpha()
 
 # ----------- loading tile 1 ----------
-tile1Img = pygame.image.load("img/dirtBlock.jpg").convert_alpha()
-
-tile1ImgPreview = pygame.Surface((tile1Img.get_width(), tile1Img.get_height()), pygame.SRCALPHA)
-tile1ImgPreview.set_alpha(128)
-tile1ImgPreview.blit(tile1Img, pygame.Vector2(0, 0))
-tile1 = TileTemplate(tile1Img, 0, tile1ImgPreview, "img/dirtBlock.jpg")
+TileTemplate.addTileTemplate("img/dirtBlock.jpg")
 
 clock = pygame.time.Clock()
 
@@ -185,27 +219,28 @@ def loadButtonFunc():
     print("Loading tilemap and templates...")
     # Loading the tile templates
     for t in TileTemplate.tiles: # Clearing GUI elements on the TileTemplates
-        GuiLib.GUI.removeElement(t.button)
-        GuiLib.GUI.removeElement(t.idText)
-        GuiLib.GUI.removeElement(t.increaseIdButton)
-        GuiLib.GUI.removeElement(t.decreaseIdButton)
-
-    TileTemplate.tiles = [] # clearing TileTemplates
-    TileTemplate.selectedTile = None
+        TileTemplate.removeTileTemplate(t)
 
     tileTemplatesData = SaveSystem.LoadTileTemplates()
-    for tileTemplateDataElement in tileTemplatesData:
+    for tileTemplateDataElement in tileTemplatesData: # parse the data
+        if not os.path.isfile(tileTemplateDataElement["Path"]):
+            print(f"Path at {tileTemplateDataElement['Path']} is invalid!")
+            continue
         t = TileTemplate.addTileTemplate(tileTemplateDataElement["Path"])
         t.changeId(tileTemplateDataElement["Id"])
-
 
     # Loading the tilemap
     for i in range(len(Tile.tilemap)): # Clearing the tilemap
         for j in range(len(Tile.tilemap[i])):
             Tile.tilemap[i][j] = None
     tilemapData = SaveSystem.LoadTilemap()
-    for tileData in tilemapData:
-        Tile.addTile(pygame.Vector2(tileData["Position"][0], tileData["Position"][1]), TileTemplate.findTileTemplateById(tileData["Id"]))
+    for tileData in tilemapData: # parse the data
+        tileTemplate = TileTemplate.findTileTemplateById(tileData["Id"])
+        pos = pygame.Vector2(tileData["Position"][0], tileData["Position"][1])
+        if tileTemplate == None:
+            print(f"Id: {tileData['Id']} does not exist! cannot load tile at ({pos.x}, {pos.y})")
+            continue
+        Tile.addTile(pos, tileTemplate)
     print("Finished loading tilemap")
 
 loadButtonImg = pygame.image.load("img/LoadButton.png")
@@ -213,8 +248,9 @@ loadButton = GuiLib.Button(pygame.Vector2(70, 160), pygame.Vector2(130, 75), loa
 
 # ---------------------------- Add Tile Button --------------------
 def addTileFunc():
-    filename = filedialog.askopenfilename(initialdir="/", title="select an image for new tile", filetypes=(("JPG File","*.jpg*"), ("PNG File","*.png*"),("all files", "*.*")))
-    TileTemplate.addTileTemplate(filename)
+    filePath = filedialog.askopenfilename(initialdir="/", title="select an image for new tile", filetypes=(("JPG File","*.jpg*"), ("PNG File","*.png*"),("all files", "*.*")))
+    if os.path.isfile(filePath):
+        TileTemplate.addTileTemplate(filePath)
 
 addTileButtonImg = pygame.image.load("img/PlusButton.png")
 addTileButton = GuiLib.Button(pygame.Vector2(980, 720), pygame.Vector2(50, 50), addTileButtonImg, addTileFunc)
@@ -275,7 +311,7 @@ while running:
 
     if not positionIsOnGUI and mouseRightButtonHeld:
         # Removing tiles
-        Tile.removeTile(selectedTileGridPos)
+        Tile.removeTileAtPos(selectedTileGridPos)
 
     # ------------------------- draw the grid ----------------------
     width = GRID_COLUMN_COUNT * GRID_SIZE
