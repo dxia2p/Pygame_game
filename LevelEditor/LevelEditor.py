@@ -80,7 +80,7 @@ class TileTemplate: # this is for the "template" of each tile
     
     def onDeleteButtonClick(self):
         TileTemplate.removeTileTemplate(self)
-        print("ASDADA")
+
 
     def __init__(self, texture, id, previewImg, texturePath):
         TileTemplate.tiles.append(self)
@@ -118,17 +118,17 @@ class TileTemplate: # this is for the "template" of each tile
     @staticmethod
     def removeTileTemplate(templateToRemove):
         # Shift all gui elements to the left
-        print("ASDSADA" + str(templateToRemove.id))
+
         index = TileTemplate.tiles.index(templateToRemove)
-        for i in range(index + 1, len(TileTemplate.tiles)):
-            print(i)
+
+        for i in range(index, len(TileTemplate.tiles)):
             TileTemplate.tiles[i].button.pos.x -= 60
             TileTemplate.tiles[i].increaseIdButton.pos.x -= 60
             TileTemplate.tiles[i].decreaseIdButton.pos.x -= 60
             TileTemplate.tiles[i].deleteButton.pos.x -= 60
             TileTemplate.tiles[i].idText.pos.x -= 60
             TileTemplate.tiles[i].idText.changeText(TileTemplate.tiles[i].idText.text)
-        
+
         # Remove all GUI elements on the templateToRemove
         Tile.removeTileByTemplate(templateToRemove)
         GuiLib.GUI.removeElement(templateToRemove.button)
@@ -193,17 +193,13 @@ GuiLib.GUI.initialize(screen)
 # Making a panel for the tiles to be displayed on (this is for decoration)
 tilePanel = GuiLib.Panel(pygame.Vector2(512, 720), pygame.Vector2(1024, 100), (230, 95, 85))
 
-# must load the increasea and decrease id buttons here because they cannot load before pygame.display is initialized
+# must load the increase and decrease id buttons here because they cannot load before pygame.display is initialized
 TileTemplate.increaseIdButtonTexture = pygame.image.load("img/plusButton2.png").convert_alpha()
 TileTemplate.decreaseIdButtonTexture = pygame.image.load("img/minusButton.png").convert_alpha()
 TileTemplate.deleteButtonTexture = pygame.image.load("img/trashIcon.png").convert_alpha()
 
 # ----------- loading tile 1 ----------
 TileTemplate.addTileTemplate("img/dirtBlock.jpg")
-
-clock = pygame.time.Clock()
-
-deltaTime = 0 # time in seconds between each frame
 
 #----------------------- Save Tiles Button ---------------------------
 def saveButtonFunc():
@@ -218,21 +214,23 @@ saveButton = GuiLib.Button(pygame.Vector2(70, 60), pygame.Vector2(130, 75), save
 def loadButtonFunc():
     print("Loading tilemap and templates...")
     # Loading the tile templates
-    for t in TileTemplate.tiles: # Clearing GUI elements on the TileTemplates
+    for t in TileTemplate.tiles: # First, need to remove all tile templates so there are no duplicates
         TileTemplate.removeTileTemplate(t)
 
     tileTemplatesData = SaveSystem.LoadTileTemplates()
     for tileTemplateDataElement in tileTemplatesData: # parse the data
         if not os.path.isfile(tileTemplateDataElement["Path"]):
-            print(f"Path at {tileTemplateDataElement['Path']} is invalid!")
+            print(f"Image path at {tileTemplateDataElement['Path']} is invalid!")
             continue
         t = TileTemplate.addTileTemplate(tileTemplateDataElement["Path"])
         t.changeId(tileTemplateDataElement["Id"])
+
 
     # Loading the tilemap
     for i in range(len(Tile.tilemap)): # Clearing the tilemap
         for j in range(len(Tile.tilemap[i])):
             Tile.tilemap[i][j] = None
+
     tilemapData = SaveSystem.LoadTilemap()
     for tileData in tilemapData: # parse the data
         tileTemplate = TileTemplate.findTileTemplateById(tileData["Id"])
@@ -248,9 +246,13 @@ loadButton = GuiLib.Button(pygame.Vector2(70, 160), pygame.Vector2(130, 75), loa
 
 # ---------------------------- Add Tile Button --------------------
 def addTileFunc():
-    filePath = filedialog.askopenfilename(initialdir="/", title="select an image for new tile", filetypes=(("JPG File","*.jpg*"), ("PNG File","*.png*"),("all files", "*.*")))
+    filePath = filedialog.askopenfilename(initialdir="/", title="select an image for new tile", filetypes=(("all files", "*.*"), ("JPG File","*.jpg*"), ("PNG File","*.png*")))
+
     if os.path.isfile(filePath):
-        TileTemplate.addTileTemplate(filePath)
+        try:
+            TileTemplate.addTileTemplate(filePath)
+        except:
+            print("Unsupported image format!")
 
 addTileButtonImg = pygame.image.load("img/PlusButton.png")
 addTileButton = GuiLib.Button(pygame.Vector2(980, 720), pygame.Vector2(50, 50), addTileButtonImg, addTileFunc)
@@ -258,6 +260,10 @@ addTileButton = GuiLib.Button(pygame.Vector2(980, 720), pygame.Vector2(50, 50), 
 #-------------------- MAIN LOOP -------------------------
 mouseLeftButtonHeld = False # a bool to store if the mouse button is held down
 mouseRightButtonHeld = False
+
+clock = pygame.time.Clock()
+deltaTime = 0 # time in seconds between each frame
+
 while running:
     deltaTime = clock.tick() / 1000
 

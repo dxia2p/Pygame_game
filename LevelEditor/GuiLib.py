@@ -1,7 +1,7 @@
 import pygame
 import sys
 
-class GUIBase:
+class GUIBase: # do not have overlapping GUI elements. this will cause strange behaviour
     def __init__(self, rect : pygame.Rect) -> None:
         GUI.addElement(self)
         self.rect = rect
@@ -22,6 +22,7 @@ class GUIBase:
 class GUI:
     elements = []
     surface = None
+    mouseUpEventUsed = False
 
     @staticmethod
     def initialize(surface):
@@ -34,6 +35,7 @@ class GUI:
     
     @staticmethod
     def checkInput(events):
+        GUI.mouseUpEventUsed = False
         for element in GUI.elements:
             element.checkInput(events)
 
@@ -53,9 +55,7 @@ class GUI:
 
     @staticmethod
     def removeElement(element):
-        GUI.elements.remove(element)
-
-        
+        GUI.elements.remove(element)   
 
 
 class Button (GUIBase):
@@ -83,12 +83,14 @@ class Button (GUIBase):
         
         for ev in event:
             if ev.type == pygame.MOUSEBUTTONUP: # Check if mouse input is within the rect of the button
+                print("ASdASDADa")
                 left = self.pos.x - self.size.x / 2
                 right = self.pos.x + self.size.x / 2
                 top = self.pos.y - self.size.y / 2
                 bottom = self.pos.y + self.size.y / 2
-                if clickPos.x > left and clickPos.x < right and clickPos.y < bottom and clickPos.y > top:
+                if clickPos.x > left and clickPos.x < right and clickPos.y < bottom and clickPos.y > top and (not GUI.mouseUpEventUsed):
                     self.func()
+                    GUI.mouseUpEventUsed = True
 
 class Text (GUIBase):
     def __init__(self, pos, fontSize, fontPath):
