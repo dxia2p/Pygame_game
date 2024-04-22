@@ -4,7 +4,6 @@ import GuiLib as GuiLib
 import sys
 import SaveSystem
 from tkinter import filedialog
-import gc
 import os
 
 # Grid constants
@@ -145,7 +144,7 @@ class TileTemplate: # this is for the "template" of each tile
             if tileTemplate.id == id:
                 return tileTemplate
         return None
-
+    
 class Camera:
     size = pygame.Vector2(0, 0) # currently the objects drawn by the camera do not scale with its size, this can be added later
     screen = None

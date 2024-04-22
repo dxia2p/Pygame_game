@@ -83,7 +83,6 @@ class Button (GUIBase):
         
         for ev in event:
             if ev.type == pygame.MOUSEBUTTONUP: # Check if mouse input is within the rect of the button
-                print("ASdASDADa")
                 left = self.pos.x - self.size.x / 2
                 right = self.pos.x + self.size.x / 2
                 top = self.pos.y - self.size.y / 2
