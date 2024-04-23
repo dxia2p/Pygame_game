@@ -12,8 +12,9 @@ GRID_ROW_COUNT = 51
 GRID_COLUMN_COUNT = 51
 
 class Tile: # class to store information about tile at position in grid
-    tilemap = [[None] * GRID_COLUMN_COUNT for i in range(GRID_ROW_COUNT)]
+    tilemap = [[None] * GRID_COLUMN_COUNT for i in range(GRID_ROW_COUNT)] # static 2d array 
     def __init__(self, position, tileTemplate): # important to note that position refers to the position in the tilemap's grid (position >= 0, position has to be an integer)
+
         self.position = position
         self.tileTemplate = tileTemplate
         Tile.tilemap[int(position.x)][int(position.y)] = self
@@ -22,13 +23,14 @@ class Tile: # class to store information about tile at position in grid
 
     @staticmethod
     def addTile(gridPosition, tileTemplate):
+        """gridPosition is in tilemap coordinates, has to be >= 0 and an integer"""
         if gridPosition.x >= 0 and gridPosition.x < GRID_COLUMN_COUNT and gridPosition.y >= 0 and gridPosition.y < GRID_ROW_COUNT:
             return Tile(gridPosition, tileTemplate)
         #else:
             #print(f"Tile position at {gridPosition.x}, {gridPosition.y} is out of bounds!")
     
     @staticmethod
-    def removeTileAtPos(gridPosition):
+    def removeTileAtPos(gridPosition): # removes a tile
         t = Tile.tilemap[int(gridPosition.x)][int(gridPosition.y)]
         if t == None:
             #print(f"Invalid tile, could not remove tile at {gridPosition.x}, {gridPosition.y}")
@@ -44,7 +46,7 @@ class Tile: # class to store information about tile at position in grid
                     Tile.tilemap[i][j].drawTile()
     
     @staticmethod
-    def removeTileByTemplate(template):
+    def removeTileByTemplate(template): # remove all tiles using this tile template
         for i in range(len(Tile.tilemap)):
             for j in range(len(Tile.tilemap[i])):
                 if Tile.tilemap[i][j] != None and Tile.tilemap[i][j].tileTemplate == template:
@@ -80,7 +82,6 @@ class TileTemplate: # this is for the "template" of each tile
     def onDeleteButtonClick(self):
         TileTemplate.removeTileTemplate(self)
 
-
     def __init__(self, texture, id, previewImg, texturePath):
         TileTemplate.tiles.append(self)
         self.texture = texture
@@ -107,6 +108,7 @@ class TileTemplate: # this is for the "template" of each tile
 
     @staticmethod
     def addTileTemplate(texturePath):
+        """Use this function to create more tile templates instead of instancing TileTemplate class!"""
         newTileImg = pygame.image.load(texturePath).convert_alpha()
         newTileImgPreview = pygame.Surface((newTileImg.get_width(), newTileImg.get_height()), pygame.SRCALPHA)
         newTileImgPreview.set_alpha(128)
@@ -145,7 +147,7 @@ class TileTemplate: # this is for the "template" of each tile
                 return tileTemplate
         return None
     
-class Camera:
+class Camera: # camera class makes it easy to offset things drawn in pygame by the position of the camera
     size = pygame.Vector2(0, 0) # currently the objects drawn by the camera do not scale with its size, this can be added later
     screen = None
     pos = pygame.Vector2(0, 0)
@@ -257,8 +259,8 @@ addTileButtonImg = pygame.image.load("img/PlusButton.png")
 addTileButton = GuiLib.Button(pygame.Vector2(980, 720), pygame.Vector2(50, 50), addTileButtonImg, addTileFunc)
 
 #-------------------- MAIN LOOP -------------------------
-mouseLeftButtonHeld = False # a bool to store if the mouse button is held down
-mouseRightButtonHeld = False
+mouseLeftButtonHeld = False # a bool to store if the left mouse button is held down
+mouseRightButtonHeld = False # a bool to store if the right mouse button is held down
 
 clock = pygame.time.Clock()
 deltaTime = 0 # time in seconds between each frame
@@ -286,12 +288,12 @@ while running:
     cameraSpeed = 0
     fastCameraSpeed = 800
     normalCameraSpeed = 400
-    if keys[pygame.K_LSHIFT]:
+    if keys[pygame.K_LSHIFT]: # increase the camera speed if the left shift key is pressed
         cameraSpeed = fastCameraSpeed
     else:
         cameraSpeed = normalCameraSpeed
 
-    if keys[pygame.K_w]:
+    if keys[pygame.K_w]: # move the camera based on user input
         Camera.pos.y += cameraSpeed * deltaTime
     if keys[pygame.K_s]:
         Camera.pos.y -= cameraSpeed * deltaTime
