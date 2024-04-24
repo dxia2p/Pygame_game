@@ -205,11 +205,12 @@ TileTemplate.addTileTemplate("img/dirtBlock.jpg")
 #----------------------- Save Tiles Button ---------------------------
 def saveButtonFunc():
     print("Saving tilemap and templates...")
-    SaveSystem.SaveTilemap(Tile.tilemap)
+    #SaveSystem.SaveTilemap(Tile.tilemap)
+    SaveSystem.SaveTilemapCompressed(Tile.tilemap)
     SaveSystem.SaveTileTemplates(TileTemplate.tiles)
 
-saveButtonImg = pygame.image.load("img/SaveButton.png")
-saveButton = GuiLib.Button(pygame.Vector2(70, 60), pygame.Vector2(130, 75), saveButtonImg, saveButtonFunc)
+saveButtonImg = pygame.image.load("img/SaveIcon.png")
+saveButton = GuiLib.Button(pygame.Vector2(30, 30), pygame.Vector2(40, 40), saveButtonImg, saveButtonFunc)
 
 #----------------------- Load Tiles Button -----------------------------
 def loadButtonFunc():
@@ -242,8 +243,8 @@ def loadButtonFunc():
         Tile.addTile(pos, tileTemplate)
     print("Finished loading tilemap")
 
-loadButtonImg = pygame.image.load("img/LoadButton.png")
-loadButton = GuiLib.Button(pygame.Vector2(70, 160), pygame.Vector2(130, 75), loadButtonImg, loadButtonFunc)
+loadButtonImg = pygame.image.load("img/LoadIcon.png")
+loadButton = GuiLib.Button(pygame.Vector2(90, 30), pygame.Vector2(40, 40), loadButtonImg, loadButtonFunc)
 
 # ---------------------------- Add Tile Button --------------------
 def addTileFunc():

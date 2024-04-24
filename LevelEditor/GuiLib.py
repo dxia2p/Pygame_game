@@ -5,12 +5,17 @@ class GUIBase: # do not have overlapping GUI elements. this will cause strange b
     def __init__(self, rect : pygame.Rect) -> None:
         GUI.addElement(self)
         self.rect = rect
+        self.isActive = True
         pass
 
     def draw(self):
+        if not self.isActive:
+            return
         pass
     
     def checkInput(self, event):
+        if not self.isActive:
+            return
         pass
 
     def checkPositionIsInElement(self, position : pygame.Vector2) -> bool:
@@ -19,7 +24,7 @@ class GUIBase: # do not have overlapping GUI elements. this will cause strange b
             return True
         return False
 
-class GUI:
+class GUI: # a class to store information about all the GUI elements
     elements = []
     surface = None
     mouseUpEventUsed = False
@@ -29,7 +34,7 @@ class GUI:
         GUI.surface = surface
     
     @staticmethod
-    def drawElements():
+    def drawElements(): # this function needs to be called every frame to draw all the GUI elements
         for element in GUI.elements:
             element.draw()
     
@@ -40,7 +45,7 @@ class GUI:
             element.checkInput(events)
 
     @staticmethod
-    def addElement(element : GUIBase):
+    def addElement(element : GUIBase): # must be called every time a GUI element is created
         GUI.elements.append(element)
 
     @staticmethod
@@ -58,7 +63,7 @@ class GUI:
         GUI.elements.remove(element)   
 
 
-class Button (GUIBase):
+class Button (GUIBase): # This is a simple button which can detect clicks within its rectangular bounding box
     def __init__(self, pos : pygame.Vector2, size : pygame.Vector2, texture, func) -> None:
         rect = pygame.Rect(pos.x - size.x / 2, pos.y - size.y / 2, size.x, size.y)
         GUIBase.__init__(self, rect)
@@ -91,7 +96,7 @@ class Button (GUIBase):
                     self.func()
                     GUI.mouseUpEventUsed = True
 
-class Text (GUIBase):
+class Text (GUIBase): # a text renderer, the functions are pretty self-explanatory
     def __init__(self, pos, fontSize, fontPath):
         
         self.pos = pos
@@ -122,7 +127,7 @@ class Text (GUIBase):
     def draw(self):
         GUI.surface.blit(self.textRender, self.rect)
 
-class Panel (GUIBase):
+class Panel (GUIBase): # just a colored rectangle
     def __init__(self, pos, size, color):
         rect = pygame.Rect(pos.x - size.x / 2, pos.y - size.y / 2, size.x, size.y)
         GUIBase.__init__(self, rect)

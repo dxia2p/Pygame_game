@@ -43,8 +43,47 @@ def SaveTilemap(tilemap, path = "TileFiles/tilemap.json"):
     print("Finished saving tilemap")
     tilemapFile.close()
 
-def SaveTilemapCompressed(tilemap, path = "TileFiles/tilemap.json"):
-    pass
+ # I will use BFS to split the tilemap up into rectangles. This may not yield the minimum number of rectangles in some cases, but the solution to get the minimum is too complicated and slow.
+def SaveTilemapCompressed(tilemap, path="TileFiles/tilemap.json"):
+    visited = [[False] * len(tilemap[i]) for i in range(len(tilemap))]
+
+    tilemapFile = open(path, "w")
+    outputList = []
+
+    for i in range(len(tilemap)):
+        for j in range(len(tilemap)):
+            if not visited[i][j] and tilemap[i][j] != None:
+                targetId = tilemap[i][j].tileTemplate.id
+                startTile = [i, j]
+                targetTile = [i, j] # first move x down until not possible, then move y right until not possible
+                while tilemap[targetTile[0]][targetTile[1]] != None and tilemap[targetTile[0]][targetTile[1]].tileTemplate.id == targetId and not visited[i][j]:
+                    visited[targetTile[0]][targetTile[1]] = True
+                    targetTile[0] += 1
+                # now expand right
+                canProceed = True
+                while canProceed:
+                    for k in range(startTile[0], targetTile[0] + 1):
+                        if tilemap[k][targetTile[1] + 1] == None or tilemap[k][targetTile[1] + 1].tileTemplate.id != targetId or visited[k][targetTile[1] + 1]:
+                            canProceed = False
+                    if canProceed:
+                        for k in range(startTile[0], targetTile[0] + 1):
+                            visited[k][targetTile[1]] = True
+                        targetTile[1] += 1
+                rectDict = {
+                    "StartPosition": [startTile[0], startTile[1]],
+                    "EndPosition": [targetTile[0], targetTile[1]],
+                    "Id": targetId
+                }
+                outputList.append(rectDict)
+    jsonObject = json.dumps(outputList, indent=2)
+    try:
+        tilemapFile.write(jsonObject)
+    except:
+        print("Error occured during saving tiles")
+    print("Finished saving tilemap")
+    tilemapFile.close()
+                
+                
 
 def LoadTileTemplates(path = "TileFiles/tileTemplates.json"):
     tileTemplatesFile = open(path, "r")
@@ -57,7 +96,3 @@ def LoadTilemap(path = "TileFiles/tilemap.json"):
     parsedJsonData = json.loads(tilemapFile.read())
     tilemapFile.close()
     return parsedJsonData
-
-def LoadTilemapCompressed(tilemap, path = "TileFiles/tilemap.json"):
-    pass
-
