@@ -1,66 +1,14 @@
 [
   {
-    "StartPosition": [
-      0,
-      0
-    ],
-    "EndPosition": [
-      1,
-      2
-    ],
-    "Id": 0
+    "IsCompressed": true
   },
   {
     "StartPosition": [
       0,
-      2
-    ],
-    "EndPosition": [
-      1,
-      2
-    ],
-    "Id": 0
-  },
-  {
-    "StartPosition": [
-      1,
-      2
-    ],
-    "EndPosition": [
-      2,
-      2
-    ],
-    "Id": 0
-  },
-  {
-    "StartPosition": [
-      2,
       0
     ],
     "EndPosition": [
-      3,
-      0
-    ],
-    "Id": 0
-  },
-  {
-    "StartPosition": [
       2,
-      1
-    ],
-    "EndPosition": [
-      3,
-      1
-    ],
-    "Id": 0
-  },
-  {
-    "StartPosition": [
-      2,
-      2
-    ],
-    "EndPosition": [
-      3,
       2
     ],
     "Id": 0
