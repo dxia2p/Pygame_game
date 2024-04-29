@@ -76,9 +76,10 @@ class Button (GUIBase): # This is a simple button which can detect clicks within
     
     def draw(self): # draw function which overrides GUIBase's draw function
         if self.texture == None: # Draw a pink rectangle in case of missing texture
-            rect = pygame.Rect(self.pos.x, self.pos.y, self.size.x, self.size.y)
-            rect.center = self.pos
-            pygame.draw.rect(self.surface, "pink", rect)
+            #rect = pygame.Rect(self.pos.x, self.pos.y, self.size.x, self.size.y)
+            #rect.center = self.pos
+            #pygame.draw.rect(self.surface, "pink", rect)
+            pass
         else: # Draw the texture normally
             GUI.surface.blit(self.texture, self.pos - (self.size / 2))
 
@@ -137,3 +138,6 @@ class Panel (GUIBase): # just a colored rectangle
     
     def draw(self):
         pygame.draw.rect(GUI.surface, self.color, pygame.Rect(self.pos.x - self.size.x / 2, self.pos.y - self.size.y / 2, self.size.x, self.size.y))
+    
+    def changeColor(self, newColor):
+        self.color = newColor

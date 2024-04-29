@@ -6,10 +6,13 @@ import SaveSystem
 from tkinter import filedialog
 import os
 
-# Grid constants
+# Grid Constants
 GRID_SIZE = 30
 GRID_ROW_COUNT = 51
 GRID_COLUMN_COUNT = 51
+
+# Font Constant
+ROBOTO_REGULAR_PATH = "Roboto/Roboto-Regular.ttf"
 
 class Tile: # class to store information about tile at position in grid
     tilemap = [[None] * GRID_COLUMN_COUNT for i in range(GRID_ROW_COUNT)] # static 2d array 
@@ -99,7 +102,7 @@ class TileTemplate: # this is for the "template" of each tile
         self.increaseIdButton = GuiLib.Button(guiPos + pygame.Vector2(20, 32.5), guiIdButtonSize, TileTemplate.increaseIdButtonTexture, self.onIncreaseIdButtonClick)
         self.decreaseIdButton = GuiLib.Button(guiPos + pygame.Vector2(-20, 32.5), guiIdButtonSize, TileTemplate.decreaseIdButtonTexture, self.onDecreaseIdButtonClick)
         
-        self.idText = GuiLib.Text(guiPos + pygame.Vector2(0, 42), 14, "Roboto/Roboto-Bold.ttf")
+        self.idText = GuiLib.Text(guiPos + pygame.Vector2(0, 42), 14, ROBOTO_REGULAR_PATH)
         self.idText.changeText(str(self.id))
         self.idText.changeBackgroundColor((230, 95, 85))
         self.idText.changeTextColor((255, 255, 255))
@@ -203,20 +206,46 @@ TileTemplate.deleteButtonTexture = pygame.image.load("img/trashIcon.png").conver
 TileTemplate.addTileTemplate("img/dirtBlock.jpg")
 
 #----------------------- Save Tiles Button ---------------------------
+saveCompressed = True
 def saveButtonFunc():
     print("Saving tilemap and templates...")
-    #SaveSystem.SaveTilemap(Tile.tilemap)
-    SaveSystem.SaveTilemapCompressed(Tile.tilemap)
+    if saveCompressed:
+        SaveSystem.SaveTilemapCompressed(Tile.tilemap)
+    else:
+        SaveSystem.SaveTilemap(Tile.tilemap)
     SaveSystem.SaveTileTemplates(TileTemplate.tiles)
 
 saveButtonImg = pygame.image.load("img/SaveIcon.png")
 saveButton = GuiLib.Button(pygame.Vector2(30, 30), pygame.Vector2(40, 40), saveButtonImg, saveButtonFunc)
 
+# Creating the tile compression toggle
+compressionDescriptionText = GuiLib.Text(pygame.Vector2(230, 30), 16, ROBOTO_REGULAR_PATH)
+compressionDescriptionText.changeText("Tilemap Compression: ")
+
+tilemapCompButtonPanel = GuiLib.Panel(pygame.Vector2(350, 30), pygame.Vector2(60, 40), (60, 240, 99))
+tilemapCompButtonText = GuiLib.Text(pygame.Vector2(350, 30), 16, ROBOTO_REGULAR_PATH)
+tilemapCompButtonText.changeText("TRUE")
+tilemapCompButtonText.changeBackgroundColor((60, 240, 99))
+
+def tilemapCompressionToggleButtonFunc():
+    global saveCompressed
+    saveCompressed = not saveCompressed
+    if saveCompressed:
+        tilemapCompButtonText.changeText("TRUE")
+        tilemapCompButtonPanel.changeColor((60, 240, 99))
+        tilemapCompButtonText.changeBackgroundColor((60, 240, 99))
+    else:
+        tilemapCompButtonText.changeText("FALSE")
+        tilemapCompButtonPanel.changeColor((230, 95, 85))
+        tilemapCompButtonText.changeBackgroundColor((230, 95, 85))
+
+tilemapCompButton = GuiLib.Button(pygame.Vector2(350, 30), pygame.Vector2(60, 40), None, tilemapCompressionToggleButtonFunc)
+
 #----------------------- Load Tiles Button -----------------------------
 def loadButtonFunc():
     print("Loading tilemap and templates...")
     # Loading the tile templates
-    for t in TileTemplate.tiles: # First, need to remove all tile templates so there are no duplicates
+    for t in TileTemplate.tiles: # Remove all tile templates so there are no duplicates
         TileTemplate.removeTileTemplate(t)
 
     tileTemplatesData = SaveSystem.LoadTileTemplates()
@@ -227,20 +256,37 @@ def loadButtonFunc():
         t = TileTemplate.addTileTemplate(tileTemplateDataElement["Path"])
         t.changeId(tileTemplateDataElement["Id"])
 
-
-    # Loading the tilemap
     for i in range(len(Tile.tilemap)): # Clearing the tilemap
         for j in range(len(Tile.tilemap[i])):
             Tile.tilemap[i][j] = None
+    
 
+    # Loading the tilemap
     tilemapData = SaveSystem.LoadTilemap()
-    for tileData in tilemapData: # parse the data
-        tileTemplate = TileTemplate.findTileTemplateById(tileData["Id"])
-        pos = pygame.Vector2(tileData["Position"][0], tileData["Position"][1])
-        if tileTemplate == None:
-            print(f"Id: {tileData['Id']} does not exist! cannot load tile at ({pos.x}, {pos.y})")
-            continue
-        Tile.addTile(pos, tileTemplate)
+
+    if tilemapData[0]["IsCompressed"] == True:
+        tilemapData.pop(0)
+        for tileData in tilemapData:
+            tileTemplate = TileTemplate.findTileTemplateById(tileData["Id"])
+            if tileTemplate == None:
+                print(f"Id: {tileData['Id']} does not exist! cannot load tile at ({pos.x}, {pos.y})")
+                continue
+            startPos = tileData["StartPosition"]
+            endPos = tileData["EndPosition"]
+            for i in range(startPos[0], endPos[0] + 1):
+                for j in range(startPos[1], endPos[1] + 1):
+                    pos = pygame.Vector2(i, j)
+                    Tile.addTile(pos, tileTemplate)
+    else:
+        tilemapData.pop(0)
+        for tileData in tilemapData: # parse the data
+            tileTemplate = TileTemplate.findTileTemplateById(tileData["Id"])
+            if tileTemplate == None:
+                print(f"Id: {tileData['Id']} does not exist! cannot load tile at ({pos.x}, {pos.y})")
+                continue
+            pos = pygame.Vector2(tileData["Position"][0], tileData["Position"][1])
+            Tile.addTile(pos, tileTemplate)
+
     print("Finished loading tilemap")
 
 loadButtonImg = pygame.image.load("img/LoadIcon.png")

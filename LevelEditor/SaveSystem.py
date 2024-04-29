@@ -109,5 +109,6 @@ def LoadTilemap(path = "TileFiles/tilemap.json"): # Data is parsed in LevelEdito
 
 def LoadTilemapCompressed(path = "TileFiles/tilemap.json"): # Data is parsed in LevelEditor.py
     tilemapFile = open(path, "r")
-
-    pass
+    parsedJsonData = json.loads(tilemapFile.read())
+    tilemapFile.close()
+    return parsedJsonData
