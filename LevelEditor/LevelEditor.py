@@ -63,6 +63,9 @@ class TileTemplate: # this is for the "template" of each tile
     decreaseIdButtonTexture = None
     deleteButtonTexture = None
 
+    maxTileTemplateGUICount = 12
+    TemplateGUIStartRange = 0
+
     def onClick(self):
         """This function is meant to be used in a Button, do not call this function directly"""
         if TileTemplate.selectedTile == self:
@@ -85,15 +88,22 @@ class TileTemplate: # this is for the "template" of each tile
     def onDeleteButtonClick(self):
         TileTemplate.removeTileTemplate(self)
 
+    def setActiveAllGUIElements(self, isActive):
+        self.button.isActive = isActive
+        self.increaseIdButton.isActive = isActive
+        self.decreaseIdButton.isActive = isActive
+        self.idText.isActive = isActive
+        self.deleteButton.isActive = isActive
+
     def __init__(self, texture, id, previewImg, texturePath):
-        TileTemplate.tiles.append(self)
+
         self.texture = texture
         self.id = id
         self.previewImg = previewImg
         self.texturePath = texturePath
 
         # GUI stuff
-        guiPos = pygame.Vector2(60 * len(TileTemplate.tiles), 720)
+        guiPos = pygame.Vector2(80 + 72 * (len(TileTemplate.tiles) % TileTemplate.maxTileTemplateGUICount), 720)
         guiSize = pygame.Vector2(50, 50)
         guiIdButtonSize = pygame.Vector2(15, 15)
         
@@ -108,6 +118,11 @@ class TileTemplate: # this is for the "template" of each tile
         self.idText.changeTextColor((255, 255, 255))
 
         self.deleteButton = GuiLib.Button(guiPos + pygame.Vector2(-15, -35), pygame.Vector2(20, 20), TileTemplate.deleteButtonTexture, self.onDeleteButtonClick)
+
+        if len(TileTemplate.tiles) + 1 > TileTemplate.TemplateGUIStartRange + TileTemplate.maxTileTemplateGUICount:
+            self.setActiveAllGUIElements(False)
+
+        TileTemplate.tiles.append(self)
 
     @staticmethod
     def addTileTemplate(texturePath):
@@ -150,7 +165,7 @@ class TileTemplate: # this is for the "template" of each tile
                 return tileTemplate
         return None
     
-class Camera: # camera class makes it easy to offset things drawn in pygame by the position of the camera
+class Camera: # camera class makes it easy to offset things drawn in pygame by the position of the camera.
     size = pygame.Vector2(0, 0) # currently the objects drawn by the camera do not scale with its size, this can be added later
     screen = None
     pos = pygame.Vector2(0, 0)
@@ -204,6 +219,31 @@ TileTemplate.deleteButtonTexture = pygame.image.load("img/trashIcon.png").conver
 
 # ----------- loading tile 1 ----------
 TileTemplate.addTileTemplate("img/dirtBlock.jpg")
+
+#------------------------------- arrows for changing the row of tile templates ------------------------
+rightArrowImg = pygame.image.load("img/RightArrow.png").convert_alpha()
+leftArrowImg = pygame.image.load("img/LeftArrow.png").convert_alpha()
+
+def moveTileTemplatesRightArrow():
+    if TileTemplate.TemplateGUIStartRange + TileTemplate.maxTileTemplateGUICount < len(TileTemplate.tiles):
+        TileTemplate.TemplateGUIStartRange += TileTemplate.maxTileTemplateGUICount
+    for i in range(len(TileTemplate.tiles)):
+        if i >= TileTemplate.TemplateGUIStartRange and i < TileTemplate.TemplateGUIStartRange + TileTemplate.maxTileTemplateGUICount:
+            TileTemplate.tiles[i].setActiveAllGUIElements(True)
+        else:
+            TileTemplate.tiles[i].setActiveAllGUIElements(False)
+
+def moveTileTemplatesLeftArrow():
+    TileTemplate.TemplateGUIStartRange -= TileTemplate.maxTileTemplateGUICount
+    TileTemplate.TemplateGUIStartRange = max(0, TileTemplate.TemplateGUIStartRange)
+    for i in range(len(TileTemplate.tiles)):
+        if i >= TileTemplate.TemplateGUIStartRange and i < TileTemplate.TemplateGUIStartRange + TileTemplate.maxTileTemplateGUICount:
+            TileTemplate.tiles[i].setActiveAllGUIElements(True)
+        else:
+            TileTemplate.tiles[i].setActiveAllGUIElements(False)
+
+tileTemplateMoveRightButton = GuiLib.Button(pygame.Vector2(930, 720), pygame.Vector2(36, 36), rightArrowImg, moveTileTemplatesRightArrow)
+tileTemplateMoveLeftButton = GuiLib.Button(pygame.Vector2(22, 720), pygame.Vector2(36, 36), leftArrowImg, moveTileTemplatesLeftArrow)
 
 #----------------------- Save Tiles Button ---------------------------
 saveCompressed = True

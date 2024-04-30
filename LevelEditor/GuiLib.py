@@ -68,13 +68,21 @@ class Button (GUIBase): # This is a simple button which can detect clicks within
         rect = pygame.Rect(pos.x - size.x / 2, pos.y - size.y / 2, size.x, size.y)
         GUIBase.__init__(self, rect)
         self.size = size
+        self.originalSize = size
         self.pos = pos
         self.func = func
+        self.originalTexture = None
+        self.largerTexture = None
         self.texture = texture
         if texture != None:
-            self.texture = pygame.transform.scale(texture, self.size)
+            self.originalTexture = pygame.transform.scale(texture, self.size)
+            self.largerTexture = pygame.transform.scale(texture, self.size * 1.15)
     
     def draw(self): # draw function which overrides GUIBase's draw function
+
+        if not self.isActive:
+            return
+
         if self.texture == None: # Draw a pink rectangle in case of missing texture
             #rect = pygame.Rect(self.pos.x, self.pos.y, self.size.x, self.size.y)
             #rect.center = self.pos
@@ -84,18 +92,28 @@ class Button (GUIBase): # This is a simple button which can detect clicks within
             GUI.surface.blit(self.texture, self.pos - (self.size / 2))
 
     def checkInput(self, event):
+
+        if not self.isActive:
+            return
+
         p = pygame.mouse.get_pos()
-        clickPos = pygame.Vector2(p[0], p[1])
+        mousePos = pygame.Vector2(p[0], p[1])
         
-        for ev in event:
-            if ev.type == pygame.MOUSEBUTTONUP: # Check if mouse input is within the rect of the button
-                left = self.pos.x - self.size.x / 2
-                right = self.pos.x + self.size.x / 2
-                top = self.pos.y - self.size.y / 2
-                bottom = self.pos.y + self.size.y / 2
-                if clickPos.x > left and clickPos.x < right and clickPos.y < bottom and clickPos.y > top and (not GUI.mouseUpEventUsed):
+        left = self.pos.x - self.size.x / 2
+        right = self.pos.x + self.size.x / 2
+        top = self.pos.y - self.size.y / 2
+        bottom = self.pos.y + self.size.y / 2
+        if mousePos.x > left and mousePos.x < right and mousePos.y < bottom and mousePos.y > top and (not GUI.mouseUpEventUsed):
+            self.size = self.originalSize * 1.15
+            self.texture = self.largerTexture
+            for ev in event:
+                if ev.type == pygame.MOUSEBUTTONUP: # Check if mouse input is within the rect of the button
                     self.func()
                     GUI.mouseUpEventUsed = True
+        else:
+            self.size = self.originalSize
+            self.texture = self.originalTexture
+
 
 class Text (GUIBase): # a text renderer, the functions are pretty self-explanatory
     def __init__(self, pos, fontSize, fontPath):
@@ -126,6 +144,8 @@ class Text (GUIBase): # a text renderer, the functions are pretty self-explanato
         self.rect.center = pygame.Vector2(self.pos.x - width / 2, self.pos.y - height / 2)
 
     def draw(self):
+        if not self.isActive:
+            return
         GUI.surface.blit(self.textRender, self.rect)
 
 class Panel (GUIBase): # just a colored rectangle
@@ -137,6 +157,8 @@ class Panel (GUIBase): # just a colored rectangle
         self.color = color
     
     def draw(self):
+        if not self.isActive:
+            return
         pygame.draw.rect(GUI.surface, self.color, pygame.Rect(self.pos.x - self.size.x / 2, self.pos.y - self.size.y / 2, self.size.x, self.size.y))
     
     def changeColor(self, newColor):

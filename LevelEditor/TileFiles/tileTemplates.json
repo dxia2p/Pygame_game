@@ -1,6 +1,54 @@
 [
   {
     "Path": "img/dirtBlock.jpg",
+    "Id": 0
+  },
+  {
+    "Path": "C:/Users/d.xia2/Downloads/RightArrow.png",
+    "Id": 1
+  },
+  {
+    "Path": "C:/Users/d.xia2/Downloads/plusButton2.png",
     "Id": 2
+  },
+  {
+    "Path": "C:/Users/d.xia2/Downloads/minusButton.png",
+    "Id": 3
+  },
+  {
+    "Path": "C:/Users/d.xia2/Downloads/minusButton.png",
+    "Id": 4
+  },
+  {
+    "Path": "C:/Users/d.xia2/Downloads/16627196-icon_l.jpg",
+    "Id": 5
+  },
+  {
+    "Path": "C:/Users/d.xia2/Downloads/RightArrow.png",
+    "Id": 6
+  },
+  {
+    "Path": "C:/Users/d.xia2/Downloads/trashIcon.png",
+    "Id": 7
+  },
+  {
+    "Path": "C:/Users/d.xia2/Downloads/plusButton2.png",
+    "Id": 8
+  },
+  {
+    "Path": "C:/Users/d.xia2/Downloads/plusButton2.png",
+    "Id": 9
+  },
+  {
+    "Path": "C:/Users/d.xia2/Downloads/minusButton.png",
+    "Id": 10
+  },
+  {
+    "Path": "C:/Users/d.xia2/Downloads/minusButton.png",
+    "Id": 11
+  },
+  {
+    "Path": "C:/Users/d.xia2/Downloads/plusButton2.png",
+    "Id": 12
   }
 ]
