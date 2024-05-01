@@ -217,9 +217,6 @@ TileTemplate.increaseIdButtonTexture = pygame.image.load("img/plusButton2.png").
 TileTemplate.decreaseIdButtonTexture = pygame.image.load("img/minusButton.png").convert_alpha()
 TileTemplate.deleteButtonTexture = pygame.image.load("img/trashIcon.png").convert_alpha()
 
-# ----------- loading tile 1 ----------
-TileTemplate.addTileTemplate("img/dirtBlock.jpg")
-
 #------------------------------- arrows for changing the row of tile templates ------------------------
 rightArrowImg = pygame.image.load("img/RightArrow.png").convert_alpha()
 leftArrowImg = pygame.image.load("img/LeftArrow.png").convert_alpha()
